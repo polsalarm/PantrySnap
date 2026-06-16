@@ -62,13 +62,16 @@ Original items:
 
 ---
 
-## ⬜ Infra / deploy
+## 🟡 Infra / deploy
 
+- ✅ **AI auth-gate** — AI endpoints require a Supabase user token (verified server-side); enforced when `SUPABASE_URL` set.
+- ✅ **Rate limit** — per-user, `AI_RATE_LIMIT_PER_MIN` (default 20/min), 429 + Retry-After.
 - ⬜ Decide host: **Vercel Functions** vs **Cloudflare Workers** (Hono runs on both).
 - ⬜ Deploy `server/` proxy; set `VITE_API_BASE` to its URL for the built PWA.
 - ⬜ Deploy PWA (static) — Vercel/Netlify/Cloudflare Pages.
 - ⬜ CORS allowlist to the PWA origin (currently open `*`).
-- ⬜ Rate-limit + basic abuse protection on AI endpoints (cost control).
+- ⬜ Move off SA key file → host secret / workload identity.
+- ⬜ Shared rate-limit store (Redis/Upstash) once multi-instance.
 - ⬜ Secrets in host env (never commit `.env`).
 
 ---
