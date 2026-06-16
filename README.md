@@ -98,12 +98,14 @@ Built in phases — each ships something usable. See **[PHASING.md](./PHASING.md
 
 ## 🚀 Getting Started
 
-> Scaffolding starts at **Phase 0** — instructions land here once the app exists.
+Phases 0–4 are implemented: PWA shell, item CRUD with photo + expiry, shelf
+view, alerts, and recipe matching.
 
 ```bash
-# coming with Phase 0 scaffold
 npm install
-npm run dev
+npm run dev      # http://localhost:5173
+npm run build    # production build + service worker
+npm run preview  # serve the production build locally
 ```
 
 ---
