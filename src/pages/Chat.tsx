@@ -110,6 +110,7 @@ export default function Chat() {
           <button
             type="submit"
             disabled={busy || !input.trim()}
+            aria-label="Send message"
             className="bg-primary text-white rounded-full w-11 h-11 flex items-center justify-center disabled:opacity-50 shrink-0"
           >
             <Icon name="send" />

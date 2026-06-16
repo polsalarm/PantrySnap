@@ -174,7 +174,7 @@ export default function Recipes() {
 function RecipeRow({ card }: { card: RecipeCard }) {
   const matchPct = card.totalCount > 0 ? Math.round((card.matchCount / card.totalCount) * 100) : 0;
   return (
-    <div className="bg-surface rounded-2xl p-4 card-shadow flex flex-col gap-2">
+    <div className="animate-in bg-surface rounded-2xl p-4 card-shadow flex flex-col gap-2">
       <div className="flex justify-between items-start gap-3">
         <div className="flex items-center gap-3 min-w-0">
           {card.image ? (

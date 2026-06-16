@@ -52,9 +52,6 @@ Built as a **mobile-first PWA** (installable, offline-capable).
 
 ## 🤖 AI Architecture
 
-The PWA is a public client, so it **cannot** safely hold an API key. AI calls route through
-a thin backend proxy:
-
 The PWA never calls Gemini or third-party APIs directly. A thin backend proxy holds keys,
 fetches real data, then grounds Gemini with it (hybrid RAG — real data in, less hallucination):
 

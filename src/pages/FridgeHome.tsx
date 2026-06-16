@@ -4,10 +4,12 @@ import { db } from '../lib/db';
 import TopBar from '../components/TopBar';
 import Icon from '../components/Icon';
 import PhotoThumb from '../components/PhotoThumb';
+import Onboarding from '../components/Onboarding';
 
 export default function FridgeHome() {
   const shelves = useLiveQuery(() => db.shelves.orderBy('order').toArray(), []);
   const items = useLiveQuery(() => db.items.toArray(), []);
+  const loading = shelves === undefined;
 
   return (
     <div>
@@ -17,6 +19,16 @@ export default function FridgeHome() {
           <h2 className="text-3xl font-bold text-text">Your Fridge</h2>
           <p className="text-text-muted mt-1">Organize. Track. Never waste again.</p>
         </div>
+
+        <Onboarding />
+
+        {loading && (
+          <div className="flex flex-col gap-4" aria-hidden="true">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="skeleton h-24 w-full" />
+            ))}
+          </div>
+        )}
 
         <div className="flex flex-col gap-4">
           {shelves?.map((shelf) => {
@@ -28,7 +40,7 @@ export default function FridgeHome() {
               <Link
                 key={shelf.id}
                 to={`/shelf/${shelf.id}`}
-                className="bg-surface rounded-2xl p-4 card-shadow flex flex-col gap-3"
+                className="animate-in bg-surface rounded-2xl p-4 card-shadow flex flex-col gap-3"
               >
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">

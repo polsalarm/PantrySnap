@@ -167,7 +167,7 @@ export default function ItemForm() {
   return (
     <div>
       <header className="bg-bg flex items-center gap-2 w-full px-5 py-3 max-w-2xl mx-auto sticky top-0 z-40">
-        <button onClick={() => navigate(-1)} className="text-text">
+        <button onClick={() => navigate(-1)} aria-label="Go back" className="text-text">
           <Icon name="arrow_back" />
         </button>
         <h1 className="text-xl font-semibold text-text">{isEdit ? 'Edit Item' : 'Add to Pantry'}</h1>
