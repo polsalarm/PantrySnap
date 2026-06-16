@@ -43,7 +43,9 @@ Backend endpoints built in `server/` (key-gated → 503 until `GEMINI_API_KEY` s
 > key was depleted; GCP credits only work via Vertex. For deploy, use workload identity or
 > a deploy-host secret instead of the key file.
 
-Frontend wiring for P6 (not started):
+Frontend wiring for P6 — ✅ DONE (scan, chat tab, generate button; build green, verified via proxy). Remaining: test on real mobile device.
+
+Original items:
 - ⬜ Add-item **scan** flow: call `/api/detect`, pre-fill `ItemForm` from the result.
 - ⬜ **Chat** page/tab (design exists: `design/screens/06-chat-assistant.png`) — not built in frontend yet.
 - ⬜ "Generate recipe" button on Recipes page → `/api/recipe/generate`.
