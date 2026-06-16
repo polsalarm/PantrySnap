@@ -1,0 +1,40 @@
+{
+  "_note": "Seed subset of USDA FoodKeeper shelf-life data. days = typical shelf life after purchase. Replace/expand from the full FoodKeeper export. Keys: category -> storage -> days.",
+  "_source": "https://www.foodsafety.gov/keep-food-safe/foodkeeper-app",
+  "categories": {
+    "dairy": { "fridge": 7, "freezer": 90, "pantry": 0 },
+    "milk": { "fridge": 7, "freezer": 90, "pantry": 0 },
+    "cheese-hard": { "fridge": 90, "freezer": 180, "pantry": 0 },
+    "cheese-soft": { "fridge": 14, "freezer": 0, "pantry": 0 },
+    "yogurt": { "fridge": 14, "freezer": 60, "pantry": 0 },
+    "eggs": { "fridge": 35, "freezer": 0, "pantry": 0 },
+    "meat-raw": { "fridge": 3, "freezer": 120, "pantry": 0 },
+    "poultry-raw": { "fridge": 2, "freezer": 270, "pantry": 0 },
+    "fish-raw": { "fridge": 2, "freezer": 180, "pantry": 0 },
+    "meat-cooked": { "fridge": 4, "freezer": 90, "pantry": 0 },
+    "deli-meat": { "fridge": 5, "freezer": 60, "pantry": 0 },
+    "vegetables-leafy": { "fridge": 5, "freezer": 240, "pantry": 0 },
+    "vegetables-root": { "fridge": 21, "freezer": 240, "pantry": 14 },
+    "vegetables": { "fridge": 7, "freezer": 240, "pantry": 5 },
+    "fruit-berries": { "fridge": 5, "freezer": 180, "pantry": 2 },
+    "fruit-citrus": { "fridge": 21, "freezer": 0, "pantry": 7 },
+    "fruit": { "fridge": 7, "freezer": 180, "pantry": 4 },
+    "bread": { "fridge": 14, "freezer": 90, "pantry": 4 },
+    "bakery": { "fridge": 7, "freezer": 90, "pantry": 3 },
+    "leftovers": { "fridge": 4, "freezer": 90, "pantry": 0 },
+    "condiments": { "fridge": 180, "freezer": 0, "pantry": 365 },
+    "canned": { "fridge": 0, "freezer": 0, "pantry": 730 },
+    "dry-goods": { "fridge": 0, "freezer": 0, "pantry": 365 },
+    "frozen": { "fridge": 2, "freezer": 240, "pantry": 0 },
+    "beverages": { "fridge": 14, "freezer": 0, "pantry": 180 },
+    "default": { "fridge": 7, "freezer": 90, "pantry": 30 }
+  },
+  "aliases": {
+    "milk-whole": "milk", "whole milk": "milk", "cheese": "cheese-hard",
+    "chicken": "poultry-raw", "beef": "meat-raw", "pork": "meat-raw",
+    "fish": "fish-raw", "spinach": "vegetables-leafy", "lettuce": "vegetables-leafy",
+    "carrot": "vegetables-root", "carrots": "vegetables-root", "potato": "vegetables-root",
+    "berries": "fruit-berries", "strawberry": "fruit-berries", "orange": "fruit-citrus",
+    "egg": "eggs", "snacks": "dry-goods", "pasta": "dry-goods", "rice": "dry-goods"
+  }
+}
