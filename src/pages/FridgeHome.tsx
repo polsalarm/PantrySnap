@@ -4,7 +4,6 @@ import { db } from '../lib/db';
 import TopBar from '../components/TopBar';
 import Icon from '../components/Icon';
 import PhotoThumb from '../components/PhotoThumb';
-import Onboarding from '../components/Onboarding';
 
 export default function FridgeHome() {
   const shelves = useLiveQuery(() => db.shelves.orderBy('order').toArray(), []);
@@ -19,8 +18,6 @@ export default function FridgeHome() {
           <h2 className="text-3xl font-bold text-text">Your Fridge</h2>
           <p className="text-text-muted mt-1">Organize. Track. Never waste again.</p>
         </div>
-
-        <Onboarding />
 
         {loading && (
           <div className="flex flex-col gap-4" aria-hidden="true">

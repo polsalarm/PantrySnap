@@ -8,6 +8,7 @@ import ItemForm from './pages/ItemForm';
 import Alerts from './pages/Alerts';
 import Recipes from './pages/Recipes';
 import Chat from './pages/Chat';
+import Welcome from './pages/Welcome';
 
 // Lazy — pulls in the Supabase SDK only when the user opens Account.
 const Account = lazy(() => import('./pages/Account'));
@@ -16,6 +17,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <div className="min-h-screen max-w-2xl mx-auto bg-bg">
+        <Welcome />
         <Routes>
           <Route path="/" element={<FridgeHome />} />
           <Route path="/shelf/:shelfId" element={<ShelfDetail />} />
