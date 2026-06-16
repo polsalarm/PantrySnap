@@ -38,6 +38,10 @@ on-hand ingredients.
 | 4 | **Expiry reminders & low-stock alerts** | Notifications for expiring soon + low stock. Filter by All / Expiring / Alerts. |
 | 5 | **Cook with what you have** | Recipe suggestions ranked by how many on-hand ingredients match. |
 | 6 | **Cook to beat expiry (auto)** | Auto-suggest a recipe that uses your soonest-to-expire items first. "Use it before you lose it" — prioritizes near-expiry ingredients in the match/ranking. |
+| 7 | **AI: auto-detect items from photo** | Snap a shelf → Claude vision identifies items, pre-fills name/category/qty %. |
+| 8 | **AI: recipe generation** | Generate full recipes (ingredients + steps) from on-hand + near-expiry items, beyond a fixed seed list. |
+| 9 | **AI: smart expiry & usage tips** | Storage/usage suggestions, cook-first nudges, waste-reduction guidance. |
+| 10 | **AI: chat assistant** | Conversational over pantry data — "what can I cook tonight?", "what's expiring?". |
 
 **Visual flow:** photo → organize by shelf → add qty + expiry → get reminders → plan meals.
 
@@ -54,10 +58,13 @@ PWA, mobile-first. Offline-capable.
 - **Local data:** IndexedDB (via Dexie) — works offline, stores items + photos
 - **Photos:** device camera via `<input capture>` / `getUserMedia`, stored as blobs in IndexedDB
 - **Notifications:** Web Notifications API + service worker for expiry/low-stock
+- **AI:** Claude (Anthropic) — vision for photo item detection, text for recipe gen / tips / chat
+- **AI backend:** thin serverless proxy holding the Claude API key (never on the PWA client)
 - **Backend (later phase):** optional — Supabase/Firebase for sync across devices + auth
-- **Recipes (later phase):** match engine over ingredient list; optional external recipe API
+- **Recipes:** match engine over ingredient list + AI generation; optional external recipe API
 
-> Local-first first. Cloud sync is a later phase so MVP works with zero backend.
+> Local-first first. Core tracking works with zero backend. AI features call a small proxy;
+> they degrade gracefully offline. Cloud sync is a later phase.
 
 ---
 
@@ -91,10 +98,13 @@ Recipe {
 
 - Multi-user accounts / sharing
 - Barcode scanning
-- AI auto-detect items from photo
 - Cloud sync
 
 (All candidates for later phases — see PHASING.md.)
+
+> **Note:** AI features (photo item detection, recipe generation, tips, chat) are now
+> **in scope** as Phase 5. They route through a thin backend proxy so the Claude API key
+> never ships in the PWA client.
 
 ---
 

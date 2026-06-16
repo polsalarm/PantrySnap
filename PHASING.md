@@ -63,7 +63,19 @@ Mobile-first PWA. Local-first MVP, cloud later. Each phase ships something usabl
 
 ---
 
-## Phase 5 — Polish & UX
+## Phase 5 — AI features
+**Goal:** AI does the tedious work.
+- Thin backend proxy (serverless) holding Claude API key — never on PWA client
+- **Photo item detection:** shelf photo → Claude vision → `{name, category, qty%}[]`, pre-fills add form
+- **AI recipe generation:** on-hand + near-expiry list → Claude → full recipe (ingredients + steps)
+- **Smart tips:** storage/usage suggestions, cook-first nudges, waste reduction
+- **Chat assistant:** conversational over pantry data ("what's expiring?", "what can I cook?")
+- Graceful offline fallback (AI features degrade, core tracking still works)
+**Done when:** snap photo auto-fills items; AI generates a recipe from expiring stock; chat answers pantry questions.
+
+---
+
+## Phase 6 — Polish & UX
 **Goal:** production feel.
 - Empty states, loading, animations
 - Search & filter items
@@ -73,7 +85,7 @@ Mobile-first PWA. Local-first MVP, cloud later. Each phase ships something usabl
 
 ---
 
-## Phase 6 — Cloud sync & accounts (optional / later)
+## Phase 7 — Cloud sync & accounts (optional / later)
 **Goal:** multi-device.
 - Auth + backend (Supabase/Firebase)
 - Sync items/photos across devices
@@ -84,7 +96,6 @@ Mobile-first PWA. Local-first MVP, cloud later. Each phase ships something usabl
 
 ## Future / backlog
 - Barcode scan to add items
-- AI auto-detect items from shelf photo
 - Shopping list generation from low-stock
 - Household sharing
 - External recipe API

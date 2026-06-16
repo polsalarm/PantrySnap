@@ -1,0 +1,108 @@
+# 🥫 PantrySnap
+
+> **A visual pantry & fridge organizer — powered by AI.**
+> Snap a photo of your shelves, track what you own, quantity, and expiry dates —
+> then let AI tell you what to cook before food goes to waste.
+>
+> **Organize. Track. Never waste again.**
+
+Built as a **mobile-first PWA** (installable, offline-capable).
+
+---
+
+## ✨ Features
+
+### Core
+- 🧊 **View your fridge like real life** — photo-based shelf layout (Top, Middle, Bottom, Crisper, Door, pantry sections). Tap a shelf to see its items.
+- 👀 **See what you have at a glance** — per-shelf list with photo, name, expiry date, quantity %.
+- 📊 **Track quantity & expiry** — quantity slider (% left) + expiry date per item.
+- 🔔 **Expiry reminders & low-stock alerts** — get notified before food spoils or runs out.
+- 🍳 **Cook with what you have** — recipes ranked by how many on-hand ingredients match.
+- ⏳ **Cook to beat expiry** — auto-suggests a recipe that uses your soonest-to-expire items first. *Use it before you lose it.*
+
+### 🤖 AI-powered
+- 📷 **Auto-detect items from photo** — snap a shelf, AI identifies items and pre-fills name, category, and estimated quantity. No manual typing.
+- ✍️ **AI recipe generation** — generates full recipes (ingredients + steps) from your on-hand and near-expiry items, not just a fixed seed list.
+- 💡 **Smart expiry & usage tips** — AI suggests how to store/use items, flags what to cook first, nudges to cut waste.
+- 💬 **Chat assistant** — ask *"what can I cook tonight?"* or *"what's expiring this week?"* — conversational over your own pantry data.
+
+---
+
+## 🛠 Tech Stack
+
+| Layer | Choice |
+|-------|--------|
+| **Frontend** | React + Vite + TypeScript |
+| **PWA** | `vite-plugin-pwa` (manifest, service worker, offline, installable) |
+| **Styling** | Tailwind CSS — warm / earthy palette (cream bg, dark green + tan accents) |
+| **State** | Zustand |
+| **Local data** | IndexedDB via Dexie (offline-first; items + photos as blobs) |
+| **Camera** | Device camera via `<input capture>` / `getUserMedia` |
+| **Notifications** | Web Notifications API + service worker |
+| **AI** | Claude (Anthropic) — vision for item detection, text for recipes / tips / chat |
+| **AI backend** | Thin serverless proxy (keeps API key off the client) |
+| **Cloud (later)** | Supabase / Firebase — sync + auth across devices |
+
+> **Local-first.** The app works fully offline for tracking. AI features call out to a
+> small backend proxy — the Claude API key **never** lives in the PWA client.
+
+---
+
+## 🤖 AI Architecture
+
+The PWA is a public client, so it **cannot** safely hold an API key. AI calls route through
+a thin backend proxy:
+
+```
+PWA client ──(photo / prompt)──▶ Backend proxy ──▶ Claude API
+                                  (holds API key,    (vision + text)
+                                   rate-limits)
+```
+
+- **Item detection:** shelf photo → Claude vision → structured `{name, category, qty%}[]`
+- **Recipe generation:** on-hand + near-expiry list → Claude → recipe (ingredients + steps)
+- **Tips / chat:** pantry context → Claude → suggestions / answers
+
+Models: latest Claude family (`claude-opus-4-8` for quality, `claude-haiku-4-5` for fast/cheap
+calls). Configure provider + key in the backend `.env` — see `.env.example` (added during setup).
+
+---
+
+## 🗺 Roadmap
+
+Built in phases — each ships something usable. See **[PHASING.md](./PHASING.md)** for detail.
+
+- **P0** — Scaffold + PWA shell
+- **P1** — Items + local storage (CRUD + photo)
+- **P2** — Fridge / shelf view
+- **P3** — Expiry reminders & low-stock alerts
+- **P4** — Recipes (cook with what you have)
+- **P4.5** — Cook to beat expiry (expiry-weighted auto-suggest)
+- **P5** — AI features (photo detect, recipe gen, tips, chat) + backend proxy
+- **P6** — Polish & UX (Lighthouse PWA pass)
+- **P7** — Cloud sync & accounts *(optional)*
+
+---
+
+## 🚀 Getting Started
+
+> Scaffolding starts at **Phase 0** — instructions land here once the app exists.
+
+```bash
+# coming with Phase 0 scaffold
+npm install
+npm run dev
+```
+
+---
+
+## 📦 Project Docs
+
+- **[PLAN.md](./PLAN.md)** — full project plan, data model, success criteria
+- **[PHASING.md](./PHASING.md)** — build phases
+
+---
+
+## 📄 License
+
+TBD.
