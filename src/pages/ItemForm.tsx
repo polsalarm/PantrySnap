@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { db, SHELF_SEED, type ExpirySource, type ShelfId } from '../lib/db';
 import { CATEGORIES, estimateExpiryDate } from '../lib/expiry';
-import { fetchShelfLife, type Storage } from '../lib/api';
+import { fetchShelfLife, detectItems, blobToBase64, type Storage } from '../lib/api';
 import Icon from '../components/Icon';
 import PhotoThumb from '../components/PhotoThumb';
 
@@ -15,6 +15,23 @@ function addDays(dateIso: string, days: number): string {
   const d = new Date(dateIso);
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
+}
+
+// Map the backend's detected category to a frontend CATEGORIES value.
+function mapDetectedCategory(detected: string): string {
+  const d = detected.toLowerCase();
+  if (CATEGORIES.includes(d)) return d;
+  if (/milk|dairy|egg|cheese|yogurt/.test(d)) return 'dairy';
+  if (/poultry|meat|beef|pork|chicken/.test(d)) return 'meat';
+  if (/fish|seafood/.test(d)) return 'seafood';
+  if (/veg|fruit|produce|leaf/.test(d)) return 'produce';
+  if (/bread|bakery/.test(d)) return 'bakery';
+  if (/condiment|sauce/.test(d)) return 'condiments';
+  if (/can|dry|pantry|grain|pasta|rice/.test(d)) return 'pantry';
+  if (/frozen/.test(d)) return 'frozen';
+  if (/beverage|drink|juice/.test(d)) return 'beverages';
+  if (/leftover/.test(d)) return 'leftovers';
+  return CATEGORIES.includes('other') ? 'other' : (CATEGORIES[0] ?? 'other');
 }
 
 export default function ItemForm() {
@@ -31,6 +48,8 @@ export default function ItemForm() {
   const [expiryDate, setExpiryDate] = useState(estimateExpiryDate(today(), CATEGORIES[0]));
   const [expirySource, setExpirySource] = useState<ExpirySource>('estimated');
   const [photoBlob, setPhotoBlob] = useState<Blob | undefined>(undefined);
+  const [scanning, setScanning] = useState(false);
+  const [scanMsg, setScanMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isEdit) return;
@@ -81,9 +100,38 @@ export default function ItemForm() {
     setExpirySource('manual');
   }
 
-  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (file) setPhotoBlob(file);
+    if (!file) return;
+    setPhotoBlob(file);
+
+    // AI scan: detect the item and pre-fill the form. Best-effort — failure is silent-ish.
+    setScanning(true);
+    setScanMsg(null);
+    try {
+      const dataUrl = await blobToBase64(file);
+      const items = await detectItems(dataUrl, file.type || 'image/jpeg');
+      const top = items[0];
+      if (top) {
+        if (!name.trim()) setName(top.name);
+        const cat = mapDetectedCategory(top.category);
+        setCategory(cat);
+        if (typeof top.quantityPct === 'number') {
+          setQuantityPct(Math.round(top.quantityPct));
+        }
+        if (expirySource === 'estimated') {
+          setExpiryDate(estimateExpiryDate(purchaseDate, cat));
+          void refineEstimate(purchaseDate, cat, shelfId);
+        }
+        setScanMsg(`Recognized: ${top.name}`);
+      } else {
+        setScanMsg('No item recognized — fill in manually.');
+      }
+    } catch {
+      setScanMsg('Scan unavailable — fill in manually.');
+    } finally {
+      setScanning(false);
+    }
   }
 
   async function handleSave() {
@@ -133,6 +181,17 @@ export default function ItemForm() {
           </span>
           <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoChange} />
         </label>
+
+        {scanning && (
+          <p className="text-sm text-primary text-center flex items-center justify-center gap-2">
+            <Icon name="auto_awesome" /> Scanning photo…
+          </p>
+        )}
+        {!scanning && scanMsg && (
+          <p className="text-sm text-text-muted text-center flex items-center justify-center gap-1.5">
+            <Icon name="check_circle" className="text-primary" /> {scanMsg}
+          </p>
+        )}
 
         <Field label="Name">
           <input

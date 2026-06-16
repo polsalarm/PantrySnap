@@ -3,9 +3,10 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Item } from '../lib/db';
 import { RECIPE_SEED } from '../lib/recipes';
 import { matchRecipes } from '../lib/match';
-import { fetchRecipes } from '../lib/api';
+import { fetchRecipes, generateRecipe, type GeneratedRecipe } from '../lib/api';
 import { expiryStatus } from '../lib/expiry';
 import TopBar from '../components/TopBar';
+import Icon from '../components/Icon';
 
 // Unified view model so backend (TheMealDB) and local-seed recipes render the same.
 interface RecipeCard {
@@ -28,6 +29,23 @@ export default function Recipes() {
   const items = useLiveQuery(() => db.items.toArray(), []) ?? [];
   const [cards, setCards] = useState<RecipeCard[]>([]);
   const [online, setOnline] = useState(true);
+  const [gen, setGen] = useState<GeneratedRecipe | null>(null);
+  const [genBusy, setGenBusy] = useState(false);
+  const [genErr, setGenErr] = useState<string | null>(null);
+
+  async function handleGenerate() {
+    setGenBusy(true);
+    setGenErr(null);
+    try {
+      const have = items.map((i) => i.name);
+      const expiring = expiringNames(items);
+      setGen(await generateRecipe(have, expiring));
+    } catch {
+      setGenErr('Could not generate a recipe right now.');
+    } finally {
+      setGenBusy(false);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -99,6 +117,37 @@ export default function Recipes() {
           <p className="text-text-muted text-center mt-8">Add some items to see recipe matches.</p>
         ) : (
           <div className="flex flex-col gap-3">
+            <button
+              onClick={handleGenerate}
+              disabled={genBusy}
+              className="flex items-center justify-center gap-2 bg-accent text-white font-semibold rounded-xl py-3 disabled:opacity-60"
+            >
+              <Icon name="auto_awesome" />
+              {genBusy ? 'Generating…' : 'Generate AI recipe from my items'}
+            </button>
+            {genErr && <p className="text-danger text-sm text-center">{genErr}</p>}
+            {gen && (
+              <div className="bg-surface rounded-2xl p-4 card-shadow flex flex-col gap-2 border border-accent/30">
+                <div className="flex items-center gap-2">
+                  <Icon name="auto_awesome" className="text-accent" />
+                  <h3 className="text-lg font-bold text-text">{gen.title}</h3>
+                </div>
+                {gen.usesExpiring.length > 0 && (
+                  <p className="text-xs text-accent-dark font-medium">
+                    Uses expiring: {gen.usesExpiring.join(', ')}
+                  </p>
+                )}
+                <p className="text-sm text-text-muted">Ingredients: {gen.ingredients.join(', ')}</p>
+                <ol className="list-decimal pl-5 mt-1 space-y-1 text-sm text-text">
+                  {gen.steps.map((s, i) => (
+                    <li key={i}>{s}</li>
+                  ))}
+                </ol>
+                {gen.basedOn && gen.basedOn.length > 0 && (
+                  <p className="text-xs text-text-muted mt-1">Inspired by: {gen.basedOn.join(', ')}</p>
+                )}
+              </div>
+            )}
             {hero && (
               <div className="bg-primary text-white rounded-2xl p-4 card-shadow">
                 <p className="text-xs font-semibold uppercase tracking-wide text-primary-soft">

@@ -6,6 +6,7 @@ const TABS = [
   { to: '/items', label: 'Items', icon: 'inventory_2' },
   { to: '/alerts', label: 'Alerts', icon: 'notification_important' },
   { to: '/recipes', label: 'Recipes', icon: 'restaurant_menu' },
+  { to: '/chat', label: 'Chat', icon: 'forum' },
 ];
 
 export default function BottomNav() {

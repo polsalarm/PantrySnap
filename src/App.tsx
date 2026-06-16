@@ -6,6 +6,7 @@ import Items from './pages/Items';
 import ItemForm from './pages/ItemForm';
 import Alerts from './pages/Alerts';
 import Recipes from './pages/Recipes';
+import Chat from './pages/Chat';
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
           <Route path="/items/:itemId/edit" element={<ItemForm />} />
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/recipes" element={<Recipes />} />
+          <Route path="/chat" element={<Chat />} />
         </Routes>
         <BottomNav />
       </div>

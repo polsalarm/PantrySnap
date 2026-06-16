@@ -48,7 +48,7 @@ export async function fetchShelfLife(
   }
 }
 
-/** Real recipes (TheMealDB), expiry-weighted. Null if backend unreachable. */
+/** Real recipes (TheMealDB/Spoonacular), expiry-weighted. Null if backend unreachable. */
 export async function fetchRecipes(
   have: string[],
   expiring: string[],
@@ -64,4 +64,88 @@ export async function fetchRecipes(
   } catch {
     return null;
   }
+}
+
+// ---- Phase 6: AI (Gemini via backend). All return null/throw-safe. ----
+
+async function postJson<T>(path: string, body: unknown, timeoutMs = 30000): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(timeoutMs),
+  });
+  if (!res.ok) {
+    const detail = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, (detail as { error?: string }).error ?? `HTTP ${res.status}`);
+  }
+  return (await res.json()) as T;
+}
+
+export class ApiError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
+/** True if the backend has AI configured (GEMINI key or Vertex). */
+export async function aiAvailable(): Promise<boolean> {
+  try {
+    const h = await getJson<{ aiEnabled?: boolean }>('/health');
+    return Boolean(h.aiEnabled);
+  } catch {
+    return false;
+  }
+}
+
+export interface DetectedItem {
+  name: string;
+  category: string;
+  quantityPct: number;
+}
+
+/** Photo (data URL or raw base64) -> detected items. Throws ApiError on failure. */
+export async function detectItems(imageBase64: string, mimeType: string): Promise<DetectedItem[]> {
+  const data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
+  const res = await postJson<{ items: DetectedItem[] }>('/detect', { imageBase64: data, mimeType });
+  return res.items;
+}
+
+export interface GeneratedRecipe {
+  title: string;
+  ingredients: string[];
+  steps: string[];
+  usesExpiring: string[];
+  basedOn?: string[];
+}
+
+/** Generate a recipe from on-hand + expiring items. Throws ApiError on failure. */
+export async function generateRecipe(have: string[], expiring: string[]): Promise<GeneratedRecipe> {
+  return postJson<GeneratedRecipe>('/recipe/generate', { have, expiring });
+}
+
+export interface ChatMessage {
+  role: 'user' | 'model';
+  text: string;
+}
+
+/** Send a chat turn with pantry context. Throws ApiError on failure. */
+export async function sendChat(
+  messages: ChatMessage[],
+  pantry: { name: string; expiryDate?: string; quantityPct?: number }[],
+): Promise<string> {
+  const res = await postJson<{ reply: string }>('/chat', { messages, pantry });
+  return res.reply;
+}
+
+/** Convert an image Blob to a base64 data URL for /detect. */
+export function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 }
