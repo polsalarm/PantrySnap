@@ -7,7 +7,7 @@ import { serve } from '@hono/node-server';
 import { getShelfLife, type Storage } from './sources/shelflife.js';
 import { lookupProduct } from './sources/openfoodfacts.js';
 import { findRecipes } from './sources/recipes.js';
-import { aiEnabled } from './lib/gemini.js';
+import { aiEnabled, aiMode } from './lib/gemini.js';
 import { detectItems, generateRecipe, chat, type ChatMessage } from './sources/ai.js';
 
 const app = new Hono();
@@ -16,7 +16,7 @@ const app = new Hono();
 app.use('/api/*', cors());
 
 app.get('/api/health', (c) =>
-  c.json({ ok: true, service: 'pantrysnap', phase: 6, aiEnabled }),
+  c.json({ ok: true, service: 'pantrysnap', phase: 6, aiEnabled, aiMode }),
 );
 
 // GET /api/product?name=milk
