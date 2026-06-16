@@ -39,7 +39,8 @@ Built as a **mobile-first PWA** (installable, offline-capable).
 | **Local data** | IndexedDB via Dexie (offline-first; items + photos as blobs) |
 | **Camera** | Device camera via `<input capture>` / `getUserMedia` |
 | **Notifications** | Web Notifications API + service worker |
-| **AI** | Google Gemini — multimodal (vision) for item detection, text for recipes / tips / chat |
+| **AI** | Google Gemini — `2.5-flash` for detection/chat, `2.5-pro` for recipe generation |
+| **Data sources** | Open Food Facts (products), USDA FoodKeeper (shelf-life), TheMealDB/Spoonacular (recipes), Gemini Google Search grounding |
 | **AI backend** | Thin serverless proxy (keeps API key off the client) |
 | **Cloud (later)** | Supabase / Firebase — sync + auth across devices |
 
@@ -53,18 +54,27 @@ Built as a **mobile-first PWA** (installable, offline-capable).
 The PWA is a public client, so it **cannot** safely hold an API key. AI calls route through
 a thin backend proxy:
 
+The PWA never calls Gemini or third-party APIs directly. A thin backend proxy holds keys,
+fetches real data, then grounds Gemini with it (hybrid RAG — real data in, less hallucination):
+
 ```
-PWA client ──(photo / prompt)──▶ Backend proxy ──▶ Gemini API
-                                  (holds API key,    (multimodal + text)
-                                   rate-limits)
+                          ┌─▶ Open Food Facts  (product info)
+PWA client ─(photo/prompt)─▶ Backend proxy ─┼─▶ USDA FoodKeeper   (shelf-life)
+                          │  (keys, RAG,     ├─▶ TheMealDB/Spoonacular (recipes)
+                          │   rate-limit)    └─▶ Gemini API (vision + text, Search grounding)
+                          ▼
+                    grounded result
 ```
 
-- **Item detection:** shelf photo → Gemini vision → structured `{name, category, qty%}[]`
-- **Recipe generation:** on-hand + near-expiry list → Gemini → recipe (ingredients + steps)
-- **Tips / chat:** pantry context → Gemini → suggestions / answers
+| Feature | Model | Real-data grounding |
+|---------|-------|---------------------|
+| **Item detection** | `gemini-2.5-flash` | photo → structured `{name, category, qty%}[]`; name reconciled vs Open Food Facts |
+| **Recipe generation** | `gemini-2.5-pro` | seeded with real recipes (TheMealDB/Spoonacular) matching on-hand + near-expiry items |
+| **Smart tips** | `gemini-2.5-flash` | shelf-life / storage from USDA FoodKeeper dataset |
+| **Chat assistant** | `gemini-2.5-flash` | pantry data + Gemini Google Search grounding for fresh info |
 
-Models: Google Gemini family (`gemini-2.5-pro` for quality, `gemini-2.5-flash` for fast/cheap
-calls). Configure provider + key in the backend `.env` — see `.env.example` (added during setup).
+Why tiered: detection + chat are high-frequency → Flash (cheap/fast). Recipe quality matters → Pro.
+Configure keys in the backend `.env` — see `.env.example` (added during setup).
 
 ---
 
@@ -78,9 +88,10 @@ Built in phases — each ships something usable. See **[PHASING.md](./PHASING.md
 - **P3** — Expiry reminders & low-stock alerts
 - **P4** — Recipes (cook with what you have)
 - **P4.5** — Cook to beat expiry (expiry-weighted auto-suggest)
-- **P5** — AI features (photo detect, recipe gen, tips, chat) + backend proxy
-- **P6** — Polish & UX (Lighthouse PWA pass)
-- **P7** — Cloud sync & accounts *(optional)*
+- **P5** — Data layer (Open Food Facts, USDA FoodKeeper, recipe APIs) + backend proxy
+- **P6** — AI features (photo detect, recipe gen, tips, chat) — Gemini, grounded
+- **P7** — Polish & UX (Lighthouse PWA pass)
+- **P8** — Cloud sync & accounts *(optional)*
 
 ---
 

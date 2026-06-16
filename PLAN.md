@@ -58,8 +58,10 @@ PWA, mobile-first. Offline-capable.
 - **Local data:** IndexedDB (via Dexie) — works offline, stores items + photos
 - **Photos:** device camera via `<input capture>` / `getUserMedia`, stored as blobs in IndexedDB
 - **Notifications:** Web Notifications API + service worker for expiry/low-stock
-- **AI:** Google Gemini — multimodal (vision) for photo item detection, text for recipe gen / tips / chat
-- **AI backend:** thin serverless proxy holding the Gemini API key (never on the PWA client)
+- **AI:** Google Gemini — `2.5-flash` (detection, tips, chat — cheap/fast) + `2.5-pro` (recipe gen — quality)
+- **Data sources (grounding):** Open Food Facts (product info), USDA FoodKeeper (shelf-life/storage, bundled JSON), TheMealDB / Spoonacular (real recipes), Gemini Google Search grounding (fresh web)
+- **Grounding pattern:** hybrid RAG — fetch real data → feed to Gemini as context → grounded output (cuts hallucination). Prefer APIs over HTML scraping (brittle + ToS risk); scrape only as last resort.
+- **AI backend:** thin serverless proxy holding the Gemini key + data-API keys (never on the PWA client)
 - **Backend (later phase):** optional — Supabase/Firebase for sync across devices + auth
 - **Recipes:** match engine over ingredient list + AI generation; optional external recipe API
 

@@ -63,19 +63,30 @@ Mobile-first PWA. Local-first MVP, cloud later. Each phase ships something usabl
 
 ---
 
-## Phase 5 — AI features
-**Goal:** AI does the tedious work.
-- Thin backend proxy (serverless) holding Gemini API key — never on PWA client
-- **Photo item detection:** shelf photo → Gemini vision → `{name, category, qty%}[]`, pre-fills add form
-- **AI recipe generation:** on-hand + near-expiry list → Gemini → full recipe (ingredients + steps)
-- **Smart tips:** storage/usage suggestions, cook-first nudges, waste reduction
-- **Chat assistant:** conversational over pantry data ("what's expiring?", "what can I cook?")
-- Graceful offline fallback (AI features degrade, core tracking still works)
-**Done when:** snap photo auto-fills items; AI generates a recipe from expiring stock; chat answers pantry questions.
+## Phase 5 — Data layer (real-data grounding)
+**Goal:** ground the app in real data, not just AI guesses.
+- Backend proxy fetch + cache layer for external sources
+- **Open Food Facts:** product name/category/nutrition lookup (by name; barcode later)
+- **USDA FoodKeeper:** bundle shelf-life/storage dataset as static JSON → expiry + storage tips
+- **Recipes:** TheMealDB (free) and/or Spoonacular — fetch real recipes filtered by ingredient
+- Normalize into internal models; cache to cut API calls + work offline-ish
+**Done when:** product lookups, shelf-life data, and real recipes available to the app via proxy.
 
 ---
 
-## Phase 6 — Polish & UX
+## Phase 6 — AI features (Gemini, grounded)
+**Goal:** AI does the tedious work — backed by Phase 5 real data.
+- Thin backend proxy holding Gemini key — never on PWA client
+- **Photo item detection** (`gemini-2.5-flash`): shelf photo → `{name, category, qty%}[]`; reconcile names vs Open Food Facts; pre-fills add form
+- **AI recipe generation** (`gemini-2.5-pro`): seed with real recipes (Phase 5) matching on-hand + near-expiry → full recipe (ingredients + steps)
+- **Smart tips** (`gemini-2.5-flash`): grounded by USDA FoodKeeper shelf-life data; cook-first nudges, waste reduction
+- **Chat assistant** (`gemini-2.5-flash`): over pantry data + Gemini Google Search grounding ("what's expiring?", "what can I cook?")
+- Hybrid RAG: real data in → grounded output. Graceful offline fallback (AI degrades, core tracking still works)
+**Done when:** snap photo auto-fills items; AI generates a grounded recipe from expiring stock; chat answers pantry questions.
+
+---
+
+## Phase 7 — Polish & UX
 **Goal:** production feel.
 - Empty states, loading, animations
 - Search & filter items
@@ -85,7 +96,7 @@ Mobile-first PWA. Local-first MVP, cloud later. Each phase ships something usabl
 
 ---
 
-## Phase 7 — Cloud sync & accounts (optional / later)
+## Phase 8 — Cloud sync & accounts (optional / later)
 **Goal:** multi-device.
 - Auth + backend (Supabase/Firebase)
 - Sync items/photos across devices
@@ -95,10 +106,9 @@ Mobile-first PWA. Local-first MVP, cloud later. Each phase ships something usabl
 ---
 
 ## Future / backlog
-- Barcode scan to add items
+- Barcode scan to add items (Open Food Facts barcode lookup)
 - Shopping list generation from low-stock
 - Household sharing
-- External recipe API
 
 ---
 
