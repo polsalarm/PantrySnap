@@ -36,8 +36,12 @@ Backend endpoints built in `server/` (key-gated → 503 until `GEMINI_API_KEY` s
 - ✅ `POST /api/recipe/generate` — on-hand + near-expiry → full recipe (`gemini-2.5-pro`), grounded by `/api/recipes` seed.
 - ✅ `POST /api/chat` — conversational over pantry data (`gemini-2.5-flash`) + Google Search grounding.
 - ✅ `/api/health` reports `aiEnabled`.
-- ⬜ Live test against real Gemini key (needs `GEMINI_API_KEY` in `server/.env`).
+- ✅ Live-tested via **Vertex AI** (project `gen-lang-client-0532531299`, $300 credits) — chat, recipe/generate, detect all green.
 - ⬜ Smart tips as a dedicated endpoint (currently folded into chat).
+
+> **AI auth:** Vertex mode, SA key at `server/.gcp-sa.json` (gitignored). AI Studio prepay
+> key was depleted; GCP credits only work via Vertex. For deploy, use workload identity or
+> a deploy-host secret instead of the key file.
 
 Frontend wiring for P6 (not started):
 - ⬜ Add-item **scan** flow: call `/api/detect`, pre-fill `ItemForm` from the result.
