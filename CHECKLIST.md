@@ -83,10 +83,10 @@ Original items:
 
 ---
 
-## ⬜ P7 / P8 (later)
+## 🟡 P7 / P8
 
-- ⬜ P7 polish: onboarding, search/filter, animations, a11y, Lighthouse pass.
-- ⬜ P8 cloud: Supabase/Firebase auth + multi-device sync + conflict handling.
+- 🟡 **P7 polish** — onboarding ✅, animations + reduced-motion ✅, loading skeletons ✅, Items category filter ✅, a11y labels ✅, code-split Account ✅. Remaining: ⬜ full Lighthouse PWA audit, ⬜ deeper a11y sweep.
+- 🟡 **P8 cloud** — Supabase scaffold built (env-gated): db v2 `uid`, sync.ts (last-write-wins), Account page (magic-link auth + Sync now), `supabase/schema.sql` (RLS). **To activate:** create Supabase project → set `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` → run schema.sql. Remaining: ⬜ live test, ⬜ sync photos (Supabase Storage), ⬜ delete tombstones.
 
 ---
 
