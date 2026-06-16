@@ -2,6 +2,7 @@
 // with near-expiry ingredients weighted higher (cook-to-beat-expiry).
 // Docs: https://www.themealdb.com/api.php
 import { cached, TTL } from '../lib/cache.js';
+import { spoonacularEnabled, spoonacularRecipes } from './spoonacular.js';
 
 export interface RankedRecipe {
   id: string;
@@ -12,7 +13,7 @@ export interface RankedRecipe {
   usesExpiring: string[];
   ingredients: string[];
   steps: string[];
-  source: 'themealdb';
+  source: 'themealdb' | 'spoonacular';
 }
 
 const BASE = 'https://www.themealdb.com/api/json/v1/1';
@@ -61,7 +62,7 @@ async function getMeal(id: string): Promise<MealFull | null> {
   });
 }
 
-export async function findRecipes(
+export async function mealDbRecipes(
   have: string[],
   expiring: string[],
   limit = 10,
@@ -113,4 +114,22 @@ export async function findRecipes(
   );
 
   return ranked.slice(0, limit);
+}
+
+// Dispatcher: prefer Spoonacular (richer) when keyed, else TheMealDB.
+// Spoonacular failure (quota/network) falls back to TheMealDB so recipes never break.
+export async function findRecipes(
+  have: string[],
+  expiring: string[],
+  limit = 10,
+): Promise<RankedRecipe[]> {
+  if (spoonacularEnabled()) {
+    try {
+      const r = await spoonacularRecipes(have, expiring, limit);
+      if (r.length > 0) return r;
+    } catch {
+      /* fall through to TheMealDB */
+    }
+  }
+  return mealDbRecipes(have, expiring, limit);
 }
