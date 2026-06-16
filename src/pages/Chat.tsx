@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../lib/db';
-import { sendChat, type ChatMessage } from '../lib/api';
+import { sendChat, aiErrorMessage, type ChatMessage } from '../lib/api';
 import TopBar from '../components/TopBar';
 import Icon from '../components/Icon';
 
@@ -39,8 +39,8 @@ export default function Chat() {
       }));
       const reply = await sendChat(next, pantry);
       setMessages((m) => [...m, { role: 'model', text: reply }]);
-    } catch {
-      setError('Assistant unavailable right now. Try again.');
+    } catch (e) {
+      setError(aiErrorMessage(e));
     } finally {
       setBusy(false);
     }

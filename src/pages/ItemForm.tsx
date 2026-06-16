@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { db, SHELF_SEED, withUid, type ExpirySource, type ShelfId } from '../lib/db';
 import { CATEGORIES, estimateExpiryDate } from '../lib/expiry';
-import { fetchShelfLife, detectItems, blobToBase64, type Storage } from '../lib/api';
+import { fetchShelfLife, detectItems, blobToBase64, aiErrorMessage, type Storage } from '../lib/api';
 import Icon from '../components/Icon';
 import PhotoThumb from '../components/PhotoThumb';
 
@@ -127,8 +127,8 @@ export default function ItemForm() {
       } else {
         setScanMsg('No item recognized — fill in manually.');
       }
-    } catch {
-      setScanMsg('Scan unavailable — fill in manually.');
+    } catch (err) {
+      setScanMsg(aiErrorMessage(err));
     } finally {
       setScanning(false);
     }

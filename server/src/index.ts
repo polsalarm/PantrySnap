@@ -9,6 +9,8 @@ import { lookupProduct } from './sources/openfoodfacts.js';
 import { findRecipes } from './sources/recipes.js';
 import { aiEnabled, aiMode } from './lib/gemini.js';
 import { detectItems, generateRecipe, chat, type ChatMessage } from './sources/ai.js';
+import { verifyToken, bearer, authRequired } from './lib/auth.js';
+import { checkRate } from './lib/ratelimit.js';
 
 const app = new Hono();
 
@@ -16,7 +18,7 @@ const app = new Hono();
 app.use('/api/*', cors());
 
 app.get('/api/health', (c) =>
-  c.json({ ok: true, service: 'pantrysnap', phase: 6, aiEnabled, aiMode }),
+  c.json({ ok: true, service: 'pantrysnap', phase: 6, aiEnabled, aiMode, authRequired }),
 );
 
 // GET /api/product?name=milk
@@ -46,15 +48,29 @@ app.get('/api/recipes', async (c) => {
   return c.json({ recipes: await findRecipes(have, expiring, limit) });
 });
 
-// ---- Phase 6: AI (Gemini). Key-gated — 503 when GEMINI_API_KEY is unset. ----
+// ---- Phase 6: AI (Gemini). Gated: AI configured + authed user + rate limit. ----
 
-const requireAI = (c: import('hono').Context) =>
-  aiEnabled ? null : c.json({ error: 'AI disabled: set GEMINI_API_KEY in server/.env' }, 503);
+// Middleware for the paid AI routes:
+//  503 if no Gemini, 401 if not signed in (when Supabase configured), 429 if over rate.
+const aiGate = async (c: import('hono').Context, next: import('hono').Next) => {
+  if (!aiEnabled) return c.json({ error: 'AI disabled: configure Gemini/Vertex on the server' }, 503);
+  const user = await verifyToken(bearer(c.req.header('Authorization')));
+  if (!user) return c.json({ error: 'Sign in to use AI features' }, 401);
+  const rate = checkRate(user.id);
+  if (!rate.ok) {
+    c.header('Retry-After', String(rate.retryAfterSec));
+    return c.json({ error: `Rate limit reached — try again in ${rate.retryAfterSec}s` }, 429);
+  }
+  c.header('X-RateLimit-Remaining', String(rate.remaining));
+  await next();
+};
+
+app.use('/api/detect', aiGate);
+app.use('/api/recipe/generate', aiGate);
+app.use('/api/chat', aiGate);
 
 // POST /api/detect  { imageBase64, mimeType }  -> [{name, category, quantityPct}]
 app.post('/api/detect', async (c) => {
-  const gate = requireAI(c);
-  if (gate) return gate;
   const body = await c.req.json().catch(() => null);
   const imageBase64 = body?.imageBase64 as string | undefined;
   const mimeType = (body?.mimeType as string | undefined) ?? 'image/jpeg';
@@ -68,8 +84,6 @@ app.post('/api/detect', async (c) => {
 
 // POST /api/recipe/generate  { have[], expiring[] }  -> generated recipe
 app.post('/api/recipe/generate', async (c) => {
-  const gate = requireAI(c);
-  if (gate) return gate;
   const body = await c.req.json().catch(() => null);
   const have = Array.isArray(body?.have) ? (body.have as string[]) : [];
   const expiring = Array.isArray(body?.expiring) ? (body.expiring as string[]) : [];
@@ -83,8 +97,6 @@ app.post('/api/recipe/generate', async (c) => {
 
 // POST /api/chat  { messages[], pantry[] }  -> { reply }
 app.post('/api/chat', async (c) => {
-  const gate = requireAI(c);
-  if (gate) return gate;
   const body = await c.req.json().catch(() => null);
   const messages = Array.isArray(body?.messages) ? (body.messages as ChatMessage[]) : [];
   const pantry = Array.isArray(body?.pantry) ? body.pantry : [];

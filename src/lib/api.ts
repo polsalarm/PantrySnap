@@ -68,10 +68,24 @@ export async function fetchRecipes(
 
 // ---- Phase 6: AI (Gemini via backend). All return null/throw-safe. ----
 
+// Lazily pull the current Supabase access token (if signed in) for AI auth.
+// Imported dynamically so the Supabase SDK stays out of the main bundle.
+async function authHeader(): Promise<Record<string, string>> {
+  try {
+    const { cloudEnabled, supabase } = await import('./supabase');
+    if (!cloudEnabled) return {};
+    const { data } = await supabase().auth.getSession();
+    const token = data.session?.access_token;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  } catch {
+    return {};
+  }
+}
+
 async function postJson<T>(path: string, body: unknown, timeoutMs = 30000): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await authHeader()) },
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(timeoutMs),
   });
@@ -88,6 +102,17 @@ export class ApiError extends Error {
     super(message);
     this.status = status;
   }
+}
+
+/** Friendly message for AI call failures (auth / rate limit / unavailable). */
+export function aiErrorMessage(e: unknown): string {
+  if (e instanceof ApiError) {
+    if (e.status === 401) return 'Sign in (Account tab) to use AI features.';
+    if (e.status === 429) return e.message || 'Too many AI requests — slow down a moment.';
+    if (e.status === 503) return 'AI is not available right now.';
+    return e.message;
+  }
+  return 'AI request failed. Try again.';
 }
 
 /** True if the backend has AI configured (GEMINI key or Vertex). */

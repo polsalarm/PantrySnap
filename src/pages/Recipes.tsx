@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Item } from '../lib/db';
 import { RECIPE_SEED } from '../lib/recipes';
 import { matchRecipes } from '../lib/match';
-import { fetchRecipes, generateRecipe, type GeneratedRecipe } from '../lib/api';
+import { fetchRecipes, generateRecipe, aiErrorMessage, type GeneratedRecipe } from '../lib/api';
 import { expiryStatus } from '../lib/expiry';
 import TopBar from '../components/TopBar';
 import Icon from '../components/Icon';
@@ -40,8 +40,8 @@ export default function Recipes() {
       const have = items.map((i) => i.name);
       const expiring = expiringNames(items);
       setGen(await generateRecipe(have, expiring));
-    } catch {
-      setGenErr('Could not generate a recipe right now.');
+    } catch (e) {
+      setGenErr(aiErrorMessage(e));
     } finally {
       setGenBusy(false);
     }
