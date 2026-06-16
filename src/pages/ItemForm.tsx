@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { db, SHELF_SEED, type ExpirySource, type ShelfId } from '../lib/db';
+import { db, SHELF_SEED, withUid, type ExpirySource, type ShelfId } from '../lib/db';
 import { CATEGORIES, estimateExpiryDate } from '../lib/expiry';
 import { fetchShelfLife, detectItems, blobToBase64, type Storage } from '../lib/api';
 import Icon from '../components/Icon';
@@ -153,7 +153,7 @@ export default function ItemForm() {
     if (isEdit) {
       await db.items.update(Number(itemId), payload);
     } else {
-      await db.items.add({ ...payload, createdAt: now });
+      await db.items.add(withUid({ ...payload, createdAt: now }));
     }
     navigate(-1);
   }

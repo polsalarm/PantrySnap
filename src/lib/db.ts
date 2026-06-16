@@ -6,6 +6,7 @@ export type ExpirySource = 'manual' | 'estimated';
 
 export interface Item {
   id?: number;
+  uid?: string; // stable cross-device id for cloud sync (Phase 8)
   name: string;
   category: string;
   shelfId: ShelfId;
@@ -35,6 +36,26 @@ db.version(1).stores({
   items: '++id, shelfId, category, expiryDate, name',
   shelves: 'id, order',
 });
+
+// v2: add `uid` (stable id for cloud sync). Backfill existing rows.
+db.version(2)
+  .stores({
+    items: '++id, &uid, shelfId, category, expiryDate, name',
+    shelves: 'id, order',
+  })
+  .upgrade(async (tx) => {
+    await tx
+      .table('items')
+      .toCollection()
+      .modify((item: Item) => {
+        if (!item.uid) item.uid = crypto.randomUUID();
+      });
+  });
+
+/** Ensure an item has a stable uid (call before add). */
+export function withUid<T extends Partial<Item>>(item: T): T & { uid: string } {
+  return { ...item, uid: item.uid ?? crypto.randomUUID() };
+}
 
 export const SHELF_SEED: Shelf[] = [
   { id: 'top', name: 'Top Shelf', icon: 'kitchen', order: 0 },

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import BottomNav from './components/BottomNav';
 import FridgeHome from './pages/FridgeHome';
@@ -7,6 +8,9 @@ import ItemForm from './pages/ItemForm';
 import Alerts from './pages/Alerts';
 import Recipes from './pages/Recipes';
 import Chat from './pages/Chat';
+
+// Lazy — pulls in the Supabase SDK only when the user opens Account.
+const Account = lazy(() => import('./pages/Account'));
 
 export default function App() {
   return (
@@ -21,6 +25,14 @@ export default function App() {
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/recipes" element={<Recipes />} />
           <Route path="/chat" element={<Chat />} />
+          <Route
+            path="/account"
+            element={
+              <Suspense fallback={<div className="p-8 text-center text-text-muted">Loading…</div>}>
+                <Account />
+              </Suspense>
+            }
+          />
         </Routes>
         <BottomNav />
       </div>
