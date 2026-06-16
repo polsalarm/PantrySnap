@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { db, SHELF_SEED, withUid, type ExpirySource, type ShelfId } from '../lib/db';
 import { CATEGORIES, estimateExpiryDate } from '../lib/expiry';
 import { fetchShelfLife, detectItems, blobToBase64, aiErrorMessage, type Storage } from '../lib/api';
+import { useAuth } from '../lib/useAuth';
 import Icon from '../components/Icon';
 import PhotoThumb from '../components/PhotoThumb';
 
@@ -50,6 +51,8 @@ export default function ItemForm() {
   const [photoBlob, setPhotoBlob] = useState<Blob | undefined>(undefined);
   const [scanning, setScanning] = useState(false);
   const [scanMsg, setScanMsg] = useState<string | null>(null);
+  const auth = useAuth();
+  const aiLocked = auth.aiRequiresSignIn && !auth.signedIn;
 
   useEffect(() => {
     if (!isEdit) return;
@@ -104,6 +107,12 @@ export default function ItemForm() {
     const file = e.target.files?.[0];
     if (!file) return;
     setPhotoBlob(file);
+
+    // AI auto-detect needs sign-in — skip the guaranteed-401 call, hint instead.
+    if (aiLocked) {
+      setScanMsg('Sign in (Account) to auto-fill items from the photo.');
+      return;
+    }
 
     // AI scan: detect the item and pre-fill the form. Best-effort — failure is silent-ish.
     setScanning(true);

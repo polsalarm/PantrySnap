@@ -4,6 +4,8 @@ import { db } from '../lib/db';
 import { sendChat, aiErrorMessage, type ChatMessage } from '../lib/api';
 import TopBar from '../components/TopBar';
 import Icon from '../components/Icon';
+import AiLock from '../components/AiLock';
+import { useAuth } from '../lib/useAuth';
 
 const SUGGESTIONS = [
   'What can I cook tonight?',
@@ -18,6 +20,8 @@ export default function Chat() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const auth = useAuth();
+  const aiLocked = auth.aiRequiresSignIn && !auth.signedIn;
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -81,6 +85,10 @@ export default function Chat() {
       </main>
 
       <div className="fixed bottom-16 left-0 w-full bg-bg/95 backdrop-blur max-w-2xl mx-auto right-0 px-5 py-3 border-t border-border">
+        {aiLocked ? (
+          <AiLock label="Sign in to chat with the assistant" />
+        ) : (
+        <>
         {messages.length === 0 && (
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
             {SUGGESTIONS.map((s) => (
@@ -116,6 +124,8 @@ export default function Chat() {
             <Icon name="send" />
           </button>
         </form>
+        </>
+        )}
       </div>
     </div>
   );

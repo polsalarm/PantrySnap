@@ -7,6 +7,8 @@ import { fetchRecipes, generateRecipe, aiErrorMessage, type GeneratedRecipe } fr
 import { expiryStatus } from '../lib/expiry';
 import TopBar from '../components/TopBar';
 import Icon from '../components/Icon';
+import AiLock from '../components/AiLock';
+import { useAuth } from '../lib/useAuth';
 
 // Unified view model so backend (TheMealDB) and local-seed recipes render the same.
 interface RecipeCard {
@@ -32,6 +34,8 @@ export default function Recipes() {
   const [gen, setGen] = useState<GeneratedRecipe | null>(null);
   const [genBusy, setGenBusy] = useState(false);
   const [genErr, setGenErr] = useState<string | null>(null);
+  const auth = useAuth();
+  const aiLocked = auth.aiRequiresSignIn && !auth.signedIn;
 
   async function handleGenerate() {
     setGenBusy(true);
@@ -117,14 +121,18 @@ export default function Recipes() {
           <p className="text-text-muted text-center mt-8">Add some items to see recipe matches.</p>
         ) : (
           <div className="flex flex-col gap-3">
-            <button
-              onClick={handleGenerate}
-              disabled={genBusy}
-              className="flex items-center justify-center gap-2 bg-accent text-white font-semibold rounded-xl py-3 disabled:opacity-60"
-            >
-              <Icon name="auto_awesome" />
-              {genBusy ? 'Generating…' : 'Generate AI recipe from my items'}
-            </button>
+            {aiLocked ? (
+              <AiLock label="Sign in to generate AI recipes" />
+            ) : (
+              <button
+                onClick={handleGenerate}
+                disabled={genBusy}
+                className="flex items-center justify-center gap-2 bg-accent text-white font-semibold rounded-xl py-3 disabled:opacity-60"
+              >
+                <Icon name="auto_awesome" />
+                {genBusy ? 'Generating…' : 'Generate AI recipe from my items'}
+              </button>
+            )}
             {genErr && <p className="text-danger text-sm text-center">{genErr}</p>}
             {gen && (
               <div className="bg-surface rounded-2xl p-4 card-shadow flex flex-col gap-2 border border-accent/30">
