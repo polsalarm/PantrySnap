@@ -17,11 +17,11 @@ Mobile-first PWA. Local-first MVP, cloud later. Each phase ships something usabl
 
 ## Phase 1 — Items & local storage
 **Goal:** add/edit/remove items.
-- IndexedDB via Dexie, `Item` model
-- Add Item form: name, category, quantity slider (%), expiry date
+- IndexedDB via Dexie, `Item` model (incl. `purchaseDate`, `expirySource`)
+- Add Item form: name, category, quantity slider (%), **purchase date ("when bought?")**, expiry date
 - Photo capture (`<input capture>`), store blob in IndexedDB
 - Item list view, edit, delete
-**Done when:** can CRUD items with photo + expiry, persists offline.
+**Done when:** can CRUD items with photo + purchase date + expiry, persists offline.
 
 ---
 
@@ -68,6 +68,7 @@ Mobile-first PWA. Local-first MVP, cloud later. Each phase ships something usabl
 - Backend proxy fetch + cache layer for external sources
 - **Open Food Facts:** product name/category/nutrition lookup (by name; barcode later)
 - **USDA FoodKeeper:** bundle shelf-life/storage dataset as static JSON → expiry + storage tips
+- **Expiry estimator:** `purchaseDate + shelfLifeDays(category, storage)` → auto-fill expiry when user leaves it blank (mark `expirySource: estimated`, user can override)
 - **Recipes:** TheMealDB (free) and/or Spoonacular — fetch real recipes filtered by ingredient
 - Normalize into internal models; cache to cut API calls + work offline-ish
 **Done when:** product lookups, shelf-life data, and real recipes available to the app via proxy.

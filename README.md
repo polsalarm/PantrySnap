@@ -15,7 +15,8 @@ Built as a **mobile-first PWA** (installable, offline-capable).
 ### Core
 - 🧊 **View your fridge like real life** — photo-based shelf layout (Top, Middle, Bottom, Crisper, Door, pantry sections). Tap a shelf to see its items.
 - 👀 **See what you have at a glance** — per-shelf list with photo, name, expiry date, quantity %.
-- 📊 **Track quantity & expiry** — quantity slider (% left) + expiry date per item.
+- 📊 **Track quantity & expiry** — quantity slider (% left), purchase date, expiry date per item.
+- 🧮 **Smart expiry estimate** — asks *"when did you buy it?"* on add, then estimates expiry from purchase date + real shelf-life data (USDA FoodKeeper) for that category & storage. Override anytime.
 - 🔔 **Expiry reminders & low-stock alerts** — get notified before food spoils or runs out.
 - 🍳 **Cook with what you have** — recipes ranked by how many on-hand ingredients match.
 - ⏳ **Cook to beat expiry** — auto-suggests a recipe that uses your soonest-to-expire items first. *Use it before you lose it.*

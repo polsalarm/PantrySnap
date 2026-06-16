@@ -34,11 +34,12 @@ on-hand ingredients.
 |---|---------|-------------|
 | 1 | **View fridge like real life** | Photo-based shelf layout (Top Shelf, Middle, Bottom, Crisper, Door). Tap shelf to see items. |
 | 2 | **See what you have at a glance** | Per-shelf item list with photo, name, expiry date, qty %. |
-| 3 | **Track quantity & expiry** | Edit item: photo, category, quantity slider (% left), expiry date. |
+| 3 | **Track quantity & expiry** | Edit item: photo, category, quantity slider (% left), **purchase date**, expiry date. |
+| 3b | **Smart expiry estimate** | Ask "when bought?" on add → estimate expiry from purchase date + USDA FoodKeeper shelf-life for the category/storage. User can override. |
 | 4 | **Expiry reminders & low-stock alerts** | Notifications for expiring soon + low stock. Filter by All / Expiring / Alerts. |
 | 5 | **Cook with what you have** | Recipe suggestions ranked by how many on-hand ingredients match. |
 | 6 | **Cook to beat expiry (auto)** | Auto-suggest a recipe that uses your soonest-to-expire items first. "Use it before you lose it" — prioritizes near-expiry ingredients in the match/ranking. |
-| 7 | **AI: auto-detect items from photo** | Snap a shelf → Gemini vision identifies items, pre-fills name/category/qty %. |
+| 7 | **AI: auto-detect items from photo** | Snap a shelf → Gemini vision identifies items, pre-fills name/category/qty %. Then prompt "when bought?" → auto-estimates expiry. |
 | 8 | **AI: recipe generation** | Generate full recipes (ingredients + steps) from on-hand + near-expiry items, beyond a fixed seed list. |
 | 9 | **AI: smart expiry & usage tips** | Storage/usage suggestions, cook-first nudges, waste-reduction guidance. |
 | 10 | **AI: chat assistant** | Conversational over pantry data — "what can I cook tonight?", "what's expiring?". |
@@ -79,11 +80,21 @@ Item {
   photoBlobId: string
   shelf: enum(top|middle|bottom|crisper|door|pantry-section...)
   category: string
-  quantityPct: number        // 0-100, % left
-  expiryDate: date
+  quantityPct: number          // 0-100, % left
+  purchaseDate: date           // when bought — drives expiry estimation
+  expiryDate: date             // user-set OR estimated
+  expirySource: enum(manual|estimated)   // how expiryDate was set
+  shelfLifeDays?: number       // from USDA FoodKeeper (for the category/storage)
   lowStockThresholdPct: number
   createdAt, updatedAt
 }
+```
+
+> **Expiry estimation:** if user doesn't set an expiry, estimate it as
+> `purchaseDate + shelfLifeDays` where `shelfLifeDays` comes from USDA FoodKeeper for the
+> item's category + storage location (fridge/freezer/pantry). User can always override.
+
+```
 
 Shelf {
   id, name, order, photoBlobId?
