@@ -1,63 +1,168 @@
+import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../lib/db';
+import { db, type Item } from '../lib/db';
 import { RECIPE_SEED } from '../lib/recipes';
 import { matchRecipes } from '../lib/match';
+import { fetchRecipes } from '../lib/api';
+import { expiryStatus } from '../lib/expiry';
 import TopBar from '../components/TopBar';
+
+// Unified view model so backend (TheMealDB) and local-seed recipes render the same.
+interface RecipeCard {
+  id: string;
+  title: string;
+  image?: string;
+  emoji?: string;
+  matchCount: number;
+  totalCount: number;
+  usesExpiring: string[];
+  missing: string[];
+  steps: string[];
+}
+
+function expiringNames(items: Item[]): string[] {
+  return items.filter((i) => expiryStatus(i.expiryDate) !== 'fresh').map((i) => i.name);
+}
 
 export default function Recipes() {
   const items = useLiveQuery(() => db.items.toArray(), []) ?? [];
-  const matches = matchRecipes(items, RECIPE_SEED);
+  const [cards, setCards] = useState<RecipeCard[]>([]);
+  const [online, setOnline] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      if (items.length === 0) {
+        setCards([]);
+        return;
+      }
+      const have = items.map((i) => i.name);
+      const expiring = expiringNames(items);
+
+      // Try the Phase 5 data layer first (real recipes, expiry-weighted).
+      const api = await fetchRecipes(have, expiring, 12);
+      if (cancelled) return;
+
+      if (api) {
+        setOnline(true);
+        setCards(
+          api.map((r) => ({
+            id: r.id,
+            title: r.title,
+            image: r.image,
+            matchCount: r.matchCount,
+            totalCount: r.totalCount,
+            usesExpiring: r.usesExpiring,
+            missing: r.ingredients.filter(
+              (ing) => !have.some((h) => ing.includes(h.toLowerCase()) || h.toLowerCase().includes(ing)),
+            ),
+            steps: r.steps,
+          })),
+        );
+      } else {
+        // Offline / backend down — fall back to the local seed matcher.
+        setOnline(false);
+        const expSet = new Set(expiring.map((e) => e.toLowerCase()));
+        setCards(
+          matchRecipes(items, RECIPE_SEED).map((m) => ({
+            id: m.recipe.id,
+            title: m.recipe.name,
+            emoji: m.recipe.emoji,
+            matchCount: m.matched.length,
+            totalCount: m.recipe.ingredients.length,
+            usesExpiring: m.matched.filter((ing) =>
+              [...expSet].some((e) => ing.includes(e) || e.includes(ing)),
+            ),
+            missing: m.missing,
+            steps: m.recipe.steps,
+          })),
+        );
+      }
+    }
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [items]);
+
+  const hero = cards.find((c) => c.usesExpiring.length > 0);
 
   return (
     <div>
       <TopBar title="Recipes" />
       <main className="max-w-2xl mx-auto px-5 pt-2 pb-28">
-        <p className="text-text-muted mb-4">Cook with what you have.</p>
+        <p className="text-text-muted mb-4">
+          Cook with what you have.{!online && ' (offline — showing saved recipes)'}
+        </p>
 
         {items.length === 0 ? (
           <p className="text-text-muted text-center mt-8">Add some items to see recipe matches.</p>
         ) : (
           <div className="flex flex-col gap-3">
-            {matches.map(({ recipe, matched, missing, matchPct }) => (
-              <div key={recipe.id} className="bg-surface rounded-2xl p-4 card-shadow flex flex-col gap-2">
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">{recipe.emoji}</span>
-                    <h3 className="text-lg font-semibold text-text">{recipe.name}</h3>
-                  </div>
-                  <span
-                    className={`text-xs font-bold px-2 py-1 rounded-full ${
-                      matchPct >= 75
-                        ? 'bg-primary-soft text-primary-dark'
-                        : matchPct >= 40
-                          ? 'bg-warn-soft text-accent-dark'
-                          : 'bg-border-soft text-text-muted'
-                    }`}
-                  >
-                    {matchPct}% match
-                  </span>
-                </div>
-                <p className="text-sm text-text-muted">
-                  {matched.length}/{recipe.ingredients.length} ingredients on hand
+            {hero && (
+              <div className="bg-primary text-white rounded-2xl p-4 card-shadow">
+                <p className="text-xs font-semibold uppercase tracking-wide text-primary-soft">
+                  ⏳ Cook to beat expiry
                 </p>
-                {missing.length > 0 && (
-                  <p className="text-xs text-text-muted">
-                    Missing: {missing.join(', ')}
-                  </p>
-                )}
-                <details className="text-sm mt-1">
-                  <summary className="cursor-pointer text-primary font-medium">View steps</summary>
-                  <ol className="list-decimal pl-5 mt-2 space-y-1 text-text">
-                    {recipe.steps.map((step, i) => (
-                      <li key={i}>{step}</li>
-                    ))}
-                  </ol>
-                </details>
+                <h3 className="text-lg font-bold mt-1">{hero.title}</h3>
+                <p className="text-sm text-primary-soft mt-1">
+                  Uses {hero.usesExpiring.length} item{hero.usesExpiring.length > 1 ? 's' : ''} expiring
+                  soon: {hero.usesExpiring.join(', ')}
+                </p>
               </div>
+            )}
+
+            {cards.map((c) => (
+              <RecipeRow key={`${c.id}-${c.title}`} card={c} />
             ))}
           </div>
         )}
       </main>
+    </div>
+  );
+}
+
+function RecipeRow({ card }: { card: RecipeCard }) {
+  const matchPct = card.totalCount > 0 ? Math.round((card.matchCount / card.totalCount) * 100) : 0;
+  return (
+    <div className="bg-surface rounded-2xl p-4 card-shadow flex flex-col gap-2">
+      <div className="flex justify-between items-start gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          {card.image ? (
+            <img src={card.image} alt={card.title} className="w-14 h-14 rounded-xl object-cover shrink-0" />
+          ) : (
+            <span className="text-2xl">{card.emoji ?? '🍽️'}</span>
+          )}
+          <h3 className="text-lg font-semibold text-text truncate">{card.title}</h3>
+        </div>
+        <span
+          className={`text-xs font-bold px-2 py-1 rounded-full shrink-0 ${
+            matchPct >= 75
+              ? 'bg-primary-soft text-primary-dark'
+              : matchPct >= 40
+                ? 'bg-warn-soft text-accent-dark'
+                : 'bg-border-soft text-text-muted'
+          }`}
+        >
+          {card.matchCount}/{card.totalCount}
+        </span>
+      </div>
+      {card.usesExpiring.length > 0 && (
+        <p className="text-xs text-accent-dark font-medium">
+          Rescues: {card.usesExpiring.join(', ')}
+        </p>
+      )}
+      {card.missing.length > 0 && (
+        <p className="text-xs text-text-muted">Missing: {card.missing.slice(0, 6).join(', ')}</p>
+      )}
+      <details className="text-sm mt-1">
+        <summary className="cursor-pointer text-primary font-medium">View steps</summary>
+        <ol className="list-decimal pl-5 mt-2 space-y-1 text-text">
+          {card.steps.map((step, i) => (
+            <li key={i}>{step}</li>
+          ))}
+        </ol>
+      </details>
     </div>
   );
 }

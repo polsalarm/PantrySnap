@@ -36,20 +36,28 @@ function extractIngredients(meal: MealFull): string[] {
 
 async function filterByIngredient(ing: string): Promise<string[]> {
   return cached(`mealdb:filter:${ing}`, TTL.recipes, async () => {
-    const url = `${BASE}/filter.php?i=${encodeURIComponent(ing)}`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
-    if (!res.ok) return [];
-    const data = (await res.json()) as { meals?: { idMeal: string }[] | null };
-    return (data.meals ?? []).map((m) => m.idMeal);
+    try {
+      const url = `${BASE}/filter.php?i=${encodeURIComponent(ing)}`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (!res.ok) return [];
+      const data = (await res.json()) as { meals?: { idMeal: string }[] | null };
+      return (data.meals ?? []).map((m) => m.idMeal);
+    } catch {
+      return []; // one slow/failed ingredient must not sink the whole request
+    }
   });
 }
 
 async function getMeal(id: string): Promise<MealFull | null> {
   return cached(`mealdb:meal:${id}`, TTL.recipes, async () => {
-    const res = await fetch(`${BASE}/lookup.php?i=${id}`, { signal: AbortSignal.timeout(8000) });
-    if (!res.ok) return null;
-    const data = (await res.json()) as { meals?: MealFull[] | null };
-    return data.meals?.[0] ?? null;
+    try {
+      const res = await fetch(`${BASE}/lookup.php?i=${id}`, { signal: AbortSignal.timeout(8000) });
+      if (!res.ok) return null;
+      const data = (await res.json()) as { meals?: MealFull[] | null };
+      return data.meals?.[0] ?? null;
+    } catch {
+      return null;
+    }
   });
 }
 

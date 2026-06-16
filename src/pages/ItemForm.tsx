@@ -2,10 +2,20 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { db, SHELF_SEED, type ExpirySource, type ShelfId } from '../lib/db';
 import { CATEGORIES, estimateExpiryDate } from '../lib/expiry';
+import { fetchShelfLife, type Storage } from '../lib/api';
 import Icon from '../components/Icon';
 import PhotoThumb from '../components/PhotoThumb';
 
 const today = () => new Date().toISOString().slice(0, 10);
+
+// Fridge shelves map to "fridge" storage; pantry to "pantry". (No freezer shelf yet.)
+const storageForShelf = (shelfId: ShelfId): Storage => (shelfId === 'pantry' ? 'pantry' : 'fridge');
+
+function addDays(dateIso: string, days: number): string {
+  const d = new Date(dateIso);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
 
 export default function ItemForm() {
   const { itemId } = useParams<{ itemId: string }>();
@@ -38,10 +48,18 @@ export default function ItemForm() {
     });
   }, [isEdit, itemId]);
 
+  // Refine an estimated expiry from the Phase 5 data layer (USDA FoodKeeper).
+  // Instant local estimate stays as the offline fallback; backend overrides it when reachable.
+  async function refineEstimate(purchase: string, cat: string, shelf: ShelfId) {
+    const res = await fetchShelfLife(cat, storageForShelf(shelf));
+    if (res) setExpiryDate(addDays(purchase, res.days));
+  }
+
   function handlePurchaseDateChange(value: string) {
     setPurchaseDate(value);
     if (expirySource === 'estimated') {
       setExpiryDate(estimateExpiryDate(value, category));
+      void refineEstimate(value, category, shelfId);
     }
   }
 
@@ -49,7 +67,13 @@ export default function ItemForm() {
     setCategory(value);
     if (expirySource === 'estimated') {
       setExpiryDate(estimateExpiryDate(purchaseDate, value));
+      void refineEstimate(purchaseDate, value, shelfId);
     }
+  }
+
+  function handleShelfChange(value: ShelfId) {
+    setShelfId(value);
+    if (expirySource === 'estimated') void refineEstimate(purchaseDate, category, value);
   }
 
   function handleExpiryDateChange(value: string) {
@@ -136,7 +160,7 @@ export default function ItemForm() {
         <Field label="Storage Location">
           <select
             value={shelfId}
-            onChange={(e) => setShelfId(e.target.value as ShelfId)}
+            onChange={(e) => handleShelfChange(e.target.value as ShelfId)}
             className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary"
           >
             {SHELF_SEED.map((s) => (
