@@ -1,0 +1,247 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>PantrySnap - Alerts</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-on-surface": "#f3f0f0",
+                        "on-secondary-container": "#783a14",
+                        "secondary": "#904c25",
+                        "on-error-container": "#93000a",
+                        "surface-variant": "#e4e2e1",
+                        "background": "#fbf9f8",
+                        "tertiary-fixed": "#e6e2db",
+                        "surface-container-high": "#eae8e7",
+                        "tertiary": "#3d3c37",
+                        "secondary-fixed-dim": "#ffb690",
+                        "on-primary-fixed": "#00210b",
+                        "on-background": "#1b1c1c",
+                        "on-primary": "#ffffff",
+                        "inverse-primary": "#a0d3a7",
+                        "on-error": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-surface": "#1b1c1c",
+                        "outline": "#717970",
+                        "on-tertiary-fixed-variant": "#484742",
+                        "on-tertiary-fixed": "#1c1c18",
+                        "surface-bright": "#fbf9f8",
+                        "primary": "#164525",
+                        "secondary-fixed": "#ffdbcb",
+                        "primary-container": "#2f5d3a",
+                        "surface-container-low": "#f6f3f2",
+                        "on-surface-variant": "#414941",
+                        "on-tertiary-container": "#cac7c0",
+                        "surface-container-highest": "#e4e2e1",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed": "#341100",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#ffa678",
+                        "surface-container": "#f0eded",
+                        "inverse-surface": "#303030",
+                        "outline-variant": "#c1c9be",
+                        "error": "#ba1a1a",
+                        "primary-fixed": "#bbefc1",
+                        "tertiary-fixed-dim": "#c9c6c0",
+                        "surface-dim": "#dcd9d9",
+                        "on-primary-container": "#a1d4a8",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed-variant": "#22502e",
+                        "surface": "#fbf9f8",
+                        "primary-fixed-dim": "#a0d3a7",
+                        "tertiary-container": "#55534e",
+                        "on-secondary-fixed-variant": "#733510",
+                        "surface-tint": "#3a6844"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "20px",
+                        "sm": "12px",
+                        "gutter": "16px",
+                        "container-margin": "20px",
+                        "base": "8px",
+                        "xs": "4px",
+                        "lg": "32px",
+                        "xl": "48px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "label-md": ["Plus Jakarta Sans"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "headline-sm": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "label-sm": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #FAF6EF; } /* Force custom cream background */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 24px rgba(47, 93, 58, 0.08);
+        }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 80px); }
+    </style>
+</head>
+<body class="text-on-background min-h-screen flex flex-col font-body-md antialiased">
+<!-- TopAppBar (Mobile & Web Context) -->
+<header class="bg-background dark:bg-background docked full-width top-0 shadow-sm flex justify-between items-center w-full px-container-margin py-base max-w-7xl mx-auto z-40 sticky">
+<div class="flex items-center gap-sm cursor-pointer hover:opacity-80 transition-opacity">
+<img alt="User profile photo" class="w-10 h-10 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDygIhe4bdPqhpr01q4t4qnIqNKqEkIC_8shxsAxVYDGtrFMZeIs5DX7Fd5n-ir9ZxUg6PNBounDnvK6D5rI99S1ZyqMhWQciXpnyQbWlXwCuTSC3oAWT0Z9Ln-1oXg0v3iZjFm28VfzqQW1I-auhwxtuLkXeAXRF0FhueAfiE3FoZ5dIed5ORlVPsUsU2lSt7md-zMlfJs0KIVBJG7Is57cdmhqyqxDp0sTS2vLtMvV22l-0xyPEv45sYUHgGdXDVC6iG6BtigvFg">
+</div>
+<div class="text-headline-sm-mobile font-headline-sm-mobile text-primary dark:text-primary-fixed-dim tracking-tight font-extrabold md:text-headline-sm">
+            Kitchen Alerts
+        </div>
+<div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity text-primary dark:text-primary-fixed-dim">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+</div>
+<!-- Web Nav (Hidden on Mobile) -->
+<nav class="hidden md:flex gap-lg absolute left-1/2 transform -translate-x-1/2">
+<a class="text-on-surface-variant text-label-md font-label-md hover:opacity-80 transition-opacity" href="#">Fridge</a>
+<a class="text-on-surface-variant text-label-md font-label-md hover:opacity-80 transition-opacity" href="#">Items</a>
+<a class="text-primary font-bold text-label-md font-label-md hover:opacity-80 transition-opacity border-b-2 border-primary pb-1" href="#">Alerts</a>
+<a class="text-on-surface-variant text-label-md font-label-md hover:opacity-80 transition-opacity" href="#">Recipes</a>
+<a class="text-on-surface-variant text-label-md font-label-md hover:opacity-80 transition-opacity" href="#">Chat</a>
+</nav>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow px-container-margin py-md max-w-7xl mx-auto w-full pb-safe md:pb-xl">
+<!-- Filter Chips -->
+<div class="flex gap-sm overflow-x-auto pb-sm mb-lg no-scrollbar">
+<button class="bg-primary text-on-primary px-4 py-2 rounded-full text-label-md font-label-md flex-shrink-0 transition-transform active:scale-95 shadow-[0_2px_8px_rgba(47,93,58,0.15)]">All</button>
+<button class="bg-surface-container border border-outline-variant text-on-surface-variant px-4 py-2 rounded-full text-label-md font-label-md flex-shrink-0 hover:bg-surface-container-high transition-colors">Expiring Soon</button>
+<button class="bg-surface-container border border-outline-variant text-on-surface-variant px-4 py-2 rounded-full text-label-md font-label-md flex-shrink-0 hover:bg-surface-container-high transition-colors">Low Stock</button>
+</div>
+<!-- Alerts List (Bento/Card Layout) -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+<!-- Alert Card: Spinach (Urgent/Expiring) -->
+<div class="glass-card rounded-xl overflow-hidden flex flex-col relative group transition-transform hover:-translate-y-1 duration-300">
+<div class="h-32 bg-surface-variant relative overflow-hidden">
+<img alt="Fresh spinach leaves" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A close-up, high-quality photograph of vibrant green fresh spinach leaves casually arranged in a simple, elegant ceramic bowl resting on a sun-drenched wooden kitchen counter. The light-mode aesthetic features soft, diffused morning sunlight creating gentle highlights on the leaves, set against a pristine, cozy modern homestead kitchen background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXKfowYiCS_12lBQd1qp7hKV6tdXFXfNlXJW3_8GTPOm3vz00t-_mZpGpukcype9tK2bG8_9PcXVq38l9gAtnF4zhUvR73CPKaqJ3muhgtMZoFxfx470QKwUq0YH00YaEFzDuY3e481_rWZK-mF1uqNudpJzOypzk0V9yf1uWKmp4RWt6OnN5FTVagp7Jdxlh33bxujrxhYqEzUVC7rA-l3LUBBW1o4ZjrEAwi3BXr8LgYZEGxlGooVhtGlQ-xdzzYjYYvDNrDuBA">
+<div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+<div class="absolute top-sm right-sm bg-error text-on-error px-3 py-1 rounded-full text-label-sm font-label-sm shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">warning</span> Expiring in 1 day
+                    </div>
+</div>
+<div class="p-sm flex flex-col gap-sm flex-grow">
+<h3 class="text-headline-sm font-headline-sm text-on-surface">Organic Baby Spinach</h3>
+<div class="flex items-center gap-2 text-error text-label-md font-label-md bg-error-container/50 p-2 rounded-lg">
+<span class="material-symbols-outlined text-[20px]">calendar_today</span> 
+                        Use by Tomorrow
+                    </div>
+<button class="mt-auto bg-primary text-on-primary w-full py-3 rounded-lg text-label-md font-label-md flex items-center justify-center gap-2 hover:bg-primary-container transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[20px]">restaurant</span>
+                        Cook this now
+                    </button>
+</div>
+</div>
+<!-- Alert Card: Greek Yogurt (Low Stock) -->
+<div class="glass-card rounded-xl overflow-hidden flex flex-col relative group transition-transform hover:-translate-y-1 duration-300">
+<div class="p-sm flex items-start gap-md">
+<div class="w-20 h-20 rounded-lg bg-surface-variant overflow-hidden flex-shrink-0">
+<img alt="Greek Yogurt" class="w-full h-full object-cover" data-alt="A macro lifestyle shot of a rustic, creamy white bowl filled with thick Greek yogurt on a clean, sunlit marble surface. The lighting is bright and airy, typical of a modern light-mode culinary application, emphasizing the tactile, soft texture of the yogurt within a warm, inviting modern homestead environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMKLC9GnJAjDnRHZ4V4dfMe8iNUF3JA0CwywIY2ExSLLbsTJQbhifjFdqsRys_5CDG3XSdvUJgx8e_GWODSaX5QeL8StZT66FTItetTd-zkQN_Rr3u2wpdJdvfW6xvg6y0gSAtyI3ueFKYY0LJ2SoTjt8Uw_SvOWlHk8HM7hx_H2DWh0fWAhbWQOP7XAYtXEfOxqjbe4bQX76mw9Eb76KxJ5VagygFaz7aTHmiN57KbCghjfUIJ_gQdZwEvnOzdypqgatFTKX2eBE">
+</div>
+<div class="flex-grow">
+<h3 class="text-headline-sm font-headline-sm text-on-surface leading-tight mb-1">Plain Greek Yogurt</h3>
+<p class="text-body-md font-body-md text-on-surface-variant">Dairy Drawer</p>
+</div>
+</div>
+<div class="px-sm pb-sm flex flex-col gap-2">
+<div class="flex justify-between items-end mb-1">
+<span class="text-secondary text-label-md font-label-md flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">inventory_2</span> Low Stock
+                        </span>
+<span class="text-label-md font-label-md text-on-surface-variant">10% left</span>
+</div>
+<!-- Custom Progress Bar -->
+<div class="h-3 w-full bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[10%] rounded-full"></div>
+</div>
+<button class="mt-sm border-[1.5px] border-outline text-on-surface py-2 rounded-lg text-label-md font-label-md flex items-center justify-center gap-2 hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[20px]">add_shopping_cart</span>
+                        Add to List
+                    </button>
+</div>
+</div>
+<!-- Alert Card: Eggs (Expiring Soon) -->
+<div class="glass-card rounded-xl overflow-hidden flex flex-col relative group transition-transform hover:-translate-y-1 duration-300">
+<div class="p-sm flex items-start gap-md border-b border-surface-variant">
+<div class="w-16 h-16 rounded-full bg-surface-variant overflow-hidden flex-shrink-0 border-2 border-surface">
+<img alt="Farm fresh eggs" class="w-full h-full object-cover" data-alt="A charming, high-angle lifestyle photograph of smooth, brown farm-fresh eggs resting inside a textured, woven wicker basket on a pristine, cream-colored kitchen counter. The light-mode aesthetic features warm, soft morning sunshine casting gentle, ambient shadows, perfectly embodying a tactile, cozy modern homestead visual style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNPX2vhFBBTnztq78rBmKYnQBcNi1LTDBQYR6yMRogCwmC2QxiC9e2D8UpTo9XSHJXZnftkAZniSOygHoGYpqhHBfRqis5Vj1MJwbhjgiH10teHUGQiuFfhK9yB6mPqKESpqvLbQED3wmTRuXRDFeX7FzBZ9fKR-21BcfXyyUDXCox6c1oIX1b43rz1Ha2ES1XSI5QBORJHS5Ynwu1jV7xIGQ1a0PB0rvVctr6bfFmodzXy75-JICs5ivkifSmtV2kRo-K2FDVinY">
+</div>
+<div class="flex-grow pt-1">
+<h3 class="text-headline-sm font-headline-sm text-on-surface leading-tight">Farm Fresh Eggs</h3>
+<p class="text-body-md font-body-md text-on-surface-variant mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">kitchen</span> Door shelf
+                        </p>
+</div>
+</div>
+<div class="p-sm flex flex-col gap-sm bg-secondary-container/10">
+<div class="flex items-center gap-2 text-secondary text-label-md font-label-md">
+<span class="material-symbols-outlined text-[20px] fill-current">schedule</span> 
+                        Expiring in 3 days
+                    </div>
+<div class="flex gap-2 mt-1">
+<button class="flex-1 bg-surface-container border border-outline-variant text-on-surface-variant py-2 rounded-lg text-label-sm font-label-sm hover:bg-surface-container-high transition-colors">
+                            Boil them
+                        </button>
+<button class="flex-1 bg-surface-container border border-outline-variant text-on-surface-variant py-2 rounded-lg text-label-sm font-label-sm hover:bg-surface-container-high transition-colors">
+                            Baking
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Context Only) -->
+<nav class="md:hidden bg-surface-container-lowest dark:bg-surface-container-lowest docked full-width bottom-0 rounded-t-xl shadow-[0_-4px_12px_rgba(47,93,58,0.08)] fixed left-0 w-full z-50 flex justify-around items-center px-gutter py-2 pb-safe border-t-0">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors w-16 h-14 rounded-xl" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">kitchen</span>
+<span class="text-label-sm font-label-sm">Fridge</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors w-16 h-14 rounded-xl" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">inventory_2</span>
+<span class="text-label-sm font-label-sm">Items</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">notification_important</span>
+<span class="text-label-sm font-label-sm font-bold">Alerts</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors w-16 h-14 rounded-xl" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">restaurant_menu</span>
+<span class="text-label-sm font-label-sm">Recipes</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors w-16 h-14 rounded-xl" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">chat_bubble</span>
+<span class="text-label-sm font-label-sm">Chat</span>
+</a>
+</nav>
+</body></html>

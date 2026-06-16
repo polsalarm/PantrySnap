@@ -1,0 +1,247 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>PantrySnap - Crisper Drawer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-on-surface": "#f3f0f0",
+                        "on-secondary-container": "#783a14",
+                        "secondary": "#904c25",
+                        "on-error-container": "#93000a",
+                        "surface-variant": "#e4e2e1",
+                        "background": "#fbf9f8",
+                        "tertiary-fixed": "#e6e2db",
+                        "surface-container-high": "#eae8e7",
+                        "tertiary": "#3d3c37",
+                        "secondary-fixed-dim": "#ffb690",
+                        "on-primary-fixed": "#00210b",
+                        "on-background": "#1b1c1c",
+                        "on-primary": "#ffffff",
+                        "inverse-primary": "#a0d3a7",
+                        "on-error": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-surface": "#1b1c1c",
+                        "outline": "#717970",
+                        "on-tertiary-fixed-variant": "#484742",
+                        "on-tertiary-fixed": "#1c1c18",
+                        "surface-bright": "#fbf9f8",
+                        "primary": "#164525",
+                        "secondary-fixed": "#ffdbcb",
+                        "primary-container": "#2f5d3a",
+                        "surface-container-low": "#f6f3f2",
+                        "on-surface-variant": "#414941",
+                        "on-tertiary-container": "#cac7c0",
+                        "surface-container-highest": "#e4e2e1",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed": "#341100",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#ffa678",
+                        "surface-container": "#f0eded",
+                        "inverse-surface": "#303030",
+                        "outline-variant": "#c1c9be",
+                        "error": "#ba1a1a",
+                        "primary-fixed": "#bbefc1",
+                        "tertiary-fixed-dim": "#c9c6c0",
+                        "surface-dim": "#dcd9d9",
+                        "on-primary-container": "#a1d4a8",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed-variant": "#22502e",
+                        "surface": "#fbf9f8",
+                        "primary-fixed-dim": "#a0d3a7",
+                        "tertiary-container": "#55534e",
+                        "on-secondary-fixed-variant": "#733510",
+                        "surface-tint": "#3a6844"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "20px",
+                        "sm": "12px",
+                        "gutter": "16px",
+                        "container-margin": "20px",
+                        "base": "8px",
+                        "xs": "4px",
+                        "lg": "32px",
+                        "xl": "48px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "label-md": ["Plus Jakarta Sans"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "headline-sm": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "label-sm": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #fbf9f8; } /* surface */
+        .card-shadow { box-shadow: 0 12px 24px -4px rgba(47, 93, 58, 0.08); }
+        .inner-glow { box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1); }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-on-background min-h-screen flex flex-col pb-safe">
+<!-- Header (Custom for Sub-page context, suppressing full TopAppBar) -->
+<header class="sticky top-0 z-40 bg-surface/90 backdrop-blur-md px-container-margin py-md flex items-center gap-4 border-b border-surface-variant/30">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant/50 transition-colors">
+<span class="material-symbols-outlined text-primary">arrow_back</span>
+</button>
+<h1 class="text-headline-sm font-headline-sm text-on-surface">Crisper Drawer</h1>
+</header>
+<!-- Main Content -->
+<main class="flex-grow px-container-margin py-lg max-w-7xl mx-auto w-full">
+<!-- Bento Grid of Items -->
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-gutter">
+<!-- Item Card: Fresh -->
+<article class="bg-surface-container-lowest rounded-xl overflow-hidden card-shadow flex flex-col relative group">
+<div class="absolute top-sm right-sm z-10 flex items-center gap-1 bg-primary text-on-primary px-2 py-1 rounded-full text-label-sm font-label-sm shadow-sm backdrop-blur-sm bg-opacity-90">
+<span class="material-symbols-outlined text-[14px]">eco</span>
+<span>Fresh</span>
+</div>
+<div class="aspect-square w-full relative overflow-hidden bg-surface-variant">
+<img alt="Spinach" class="w-full h-full object-cover inner-glow group-hover:scale-105 transition-transform duration-500" data-alt="Close up photography of vibrant, fresh green spinach leaves filling the frame. Shot from directly above in bright, soft natural kitchen lighting. The greens pop against a subtle cream surface beneath, conveying a sense of pristine modern homesteading and organized domestic life." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6_wvUAdwZoBbawIibiV2dwdHo7qXXdT0AE6JS5HCcMa2lAE4brykSt5BgC1AlgWymt4NC2Qzwk7HrpmT2WEgsPIW1jCRMRoM1PE7yZ5ogIK6ZFF1LxhbLCanj3Tbh-rxKY3fRgu1x5fYVIkP3oZ3zcrVbUEOMYMicYxvIhKQz4maKbUo10VoKEBNE6LlJHlDIPIUeg1PnrQwoEWkEwx-if1wfzjTTAd4abM54uOw482qcy4ZWN0IGRSjMKE6pmPUZXxpJ_6hcR4Q">
+</div>
+<div class="p-sm flex flex-col gap-2">
+<h3 class="text-label-md font-label-md text-on-surface">Baby Spinach</h3>
+<!-- Progress Bar -->
+<div class="mt-auto pt-2">
+<div class="flex justify-between text-label-sm font-label-sm text-on-surface-variant mb-1">
+<span>Qty</span>
+<span>60%</span>
+</div>
+<div class="h-2 w-full bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full w-[60%]"></div>
+</div>
+</div>
+</div>
+</article>
+<!-- Item Card: Soon -->
+<article class="bg-surface-container-lowest rounded-xl overflow-hidden card-shadow flex flex-col relative group">
+<div class="absolute top-sm right-sm z-10 flex items-center gap-1 bg-secondary text-on-primary px-2 py-1 rounded-full text-label-sm font-label-sm shadow-sm backdrop-blur-sm bg-opacity-90">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+<span>Soon</span>
+</div>
+<div class="aspect-square w-full relative overflow-hidden bg-surface-variant">
+<img alt="Carrots" class="w-full h-full object-cover inner-glow group-hover:scale-105 transition-transform duration-500" data-alt="A bunch of raw, unpeeled orange carrots with green leafy tops resting on a clean, soft cream background. High-quality culinary photography with soft, diffused light highlighting the natural texture and vibrant orange hues, fitting a modern, organized pantry aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6CUq7m2UVnbrVHlG2F2L3xiL50aqG6BcPjLc4lOiGJuh2wQDZD2uud5P-xiFEMrqLGtsiFCIMHEFwRJXL4BNZjflHX-2YDMHT5fGPjeDYtc5Gtgj4DemiwrZ514pP0KQfpLhnm3ELtzBgxvJgOoA6oIBdpD70bByfb7L9huo_qpVbtAd5cSincJbT__C9j67AEpcHTn5p6OpP_2Xsh79H7eko2_rel9UCDa98x0rVrnOYIYDPvOYtjKXPndqAARKacu6pfnIKtec">
+</div>
+<div class="p-sm flex flex-col gap-2">
+<h3 class="text-label-md font-label-md text-on-surface">Organic Carrots</h3>
+<!-- Progress Bar -->
+<div class="mt-auto pt-2">
+<div class="flex justify-between text-label-sm font-label-sm text-on-surface-variant mb-1">
+<span>Qty</span>
+<span>80%</span>
+</div>
+<div class="h-2 w-full bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full w-[80%]"></div>
+</div>
+</div>
+</div>
+</article>
+<!-- Item Card: Expired -->
+<article class="bg-surface-container-lowest rounded-xl overflow-hidden card-shadow flex flex-col relative group opacity-75">
+<div class="absolute top-sm right-sm z-10 flex items-center gap-1 bg-error text-on-error px-2 py-1 rounded-full text-label-sm font-label-sm shadow-sm backdrop-blur-sm bg-opacity-90">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+<span>Expired</span>
+</div>
+<div class="aspect-square w-full relative overflow-hidden bg-surface-variant">
+<img alt="Bell Pepper" class="w-full h-full object-cover inner-glow group-hover:scale-105 transition-transform duration-500 grayscale-[20%]" data-alt="A single red bell pepper slightly past its prime, resting on a clean, bright cream surface. The lighting is soft and cinematic, emphasizing the texture of the vegetable. The overall mood is modern domestic calm, despite the subject being slightly withered." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzq0W42Jusx-4PvD834Utv0EUa-gQvyuITCU28Vwy3FaCaxfYmbaStqTDREyzo4GC4NF74BQkYhBSmmYkKaHVqpMIO1GfASTqhLCAN599ryL_Y4Az4Wfx0hfzu-CDOCuVA5OX5p59xgzwMTI_-hZm81oBdVvxwYInvfr99VxVd2M10ObmMMcoUmQ2-1SgOkJs6YDHFX_4eC1a8bDRHbEdHzMGG-KJTTaOgBzpA5BSCZd40tlGJ3tLaaVDsb1EVEaqeHdzDVhTUkkE">
+</div>
+<div class="p-sm flex flex-col gap-2">
+<h3 class="text-label-md font-label-md text-on-surface line-through decoration-error/50">Red Bell Pepper</h3>
+<!-- Progress Bar -->
+<div class="mt-auto pt-2">
+<div class="flex justify-between text-label-sm font-label-sm text-on-surface-variant mb-1">
+<span>Qty</span>
+<span>10%</span>
+</div>
+<div class="h-2 w-full bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-error rounded-full w-[10%]"></div>
+</div>
+</div>
+</div>
+</article>
+<!-- Item Card: Fresh -->
+<article class="bg-surface-container-lowest rounded-xl overflow-hidden card-shadow flex flex-col relative group">
+<div class="absolute top-sm right-sm z-10 flex items-center gap-1 bg-primary text-on-primary px-2 py-1 rounded-full text-label-sm font-label-sm shadow-sm backdrop-blur-sm bg-opacity-90">
+<span class="material-symbols-outlined text-[14px]">eco</span>
+<span>Fresh</span>
+</div>
+<div class="aspect-square w-full relative overflow-hidden bg-surface-variant">
+<img alt="Celery" class="w-full h-full object-cover inner-glow group-hover:scale-105 transition-transform duration-500" data-alt="Crisp, bright green celery stalks arranged neatly against a warm cream backdrop. The photography is high-end and tactile, highlighting the watery freshness of the vegetable with soft, natural kitchen light fitting a modern, organized culinary aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDp5X_lX9ojEDkT84PsQfA8xoYBSxfJENApAMCTl3xtcM6YgZ5L14xjp0SJpVqOaV9NKN_CrE7QcFaQtkXYts8_uopDZS-YNDC0Q6ijidbQF38387nlQQAi3Lpkiq7fud_7l_S5NPA2bbNvmbEfQGcTxr2biPIF6btErWW1xuYtwOLeC7nkZRhKUdplPxA1VBQ-3a-pNKfh0fk99srM19wEk0lLddQFMf8_cejmmCZBdEqsmOa1n5rZtkjDv9IT-EgTkChnqnhmu9c">
+</div>
+<div class="p-sm flex flex-col gap-2">
+<h3 class="text-label-md font-label-md text-on-surface">Celery Hearts</h3>
+<!-- Progress Bar -->
+<div class="mt-auto pt-2">
+<div class="flex justify-between text-label-sm font-label-sm text-on-surface-variant mb-1">
+<span>Qty</span>
+<span>100%</span>
+</div>
+<div class="h-2 w-full bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full w-[100%]"></div>
+</div>
+</div>
+</div>
+</article>
+</div>
+</main>
+<!-- BottomNavBar (Suppressed due to Sub-page intent per Semantic Shell Mandate: "Any sub-page featuring a 'Close' or 'Back' action implies a temporary departure... hide the shell") -->
+<!-- However, the prompt explicitly requests "Bottom navigation active on Fridge". I will follow the user prompt over the general rule in this specific case, while styling it according to the JSON. -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-gutter py-2 pb-safe bg-surface-container-lowest dark:bg-surface-container-lowest shadow-[0_-4px_12px_rgba(47,93,58,0.08)] rounded-t-xl">
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">kitchen</span>
+<span class="text-label-sm font-label-sm mt-1">Fridge</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors px-2 py-1 rounded-lg" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="text-label-sm font-label-sm mt-1">Items</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors px-2 py-1 rounded-lg" href="#">
+<span class="material-symbols-outlined">notification_important</span>
+<span class="text-label-sm font-label-sm mt-1">Alerts</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors px-2 py-1 rounded-lg" href="#">
+<span class="material-symbols-outlined">restaurant_menu</span>
+<span class="text-label-sm font-label-sm mt-1">Recipes</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors px-2 py-1 rounded-lg" href="#">
+<span class="material-symbols-outlined">chat_bubble</span>
+<span class="text-label-sm font-label-sm mt-1">Chat</span>
+</a>
+</nav>
+<!-- Desktop Side Nav Spacer to prevent content hiding behind fixed nav if we had one, but we are keeping it simple for subpage -->
+<div class="h-20 md:hidden"></div>
+</body></html>

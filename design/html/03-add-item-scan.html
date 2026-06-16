@@ -1,0 +1,275 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>PantrySnap - Add Item</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-on-surface": "#f3f0f0",
+                        "on-secondary-container": "#783a14",
+                        "secondary": "#904c25",
+                        "on-error-container": "#93000a",
+                        "surface-variant": "#e4e2e1",
+                        "background": "#fbf9f8",
+                        "tertiary-fixed": "#e6e2db",
+                        "surface-container-high": "#eae8e7",
+                        "tertiary": "#3d3c37",
+                        "secondary-fixed-dim": "#ffb690",
+                        "on-primary-fixed": "#00210b",
+                        "on-background": "#1b1c1c",
+                        "on-primary": "#ffffff",
+                        "inverse-primary": "#a0d3a7",
+                        "on-error": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-surface": "#1b1c1c",
+                        "outline": "#717970",
+                        "on-tertiary-fixed-variant": "#484742",
+                        "on-tertiary-fixed": "#1c1c18",
+                        "surface-bright": "#fbf9f8",
+                        "primary": "#164525",
+                        "secondary-fixed": "#ffdbcb",
+                        "primary-container": "#2f5d3a",
+                        "surface-container-low": "#f6f3f2",
+                        "on-surface-variant": "#414941",
+                        "on-tertiary-container": "#cac7c0",
+                        "surface-container-highest": "#e4e2e1",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed": "#341100",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#ffa678",
+                        "surface": "#fbf9f8",
+                        "inverse-surface": "#303030",
+                        "outline-variant": "#c1c9be",
+                        "error": "#ba1a1a",
+                        "primary-fixed": "#bbefc1",
+                        "tertiary-fixed-dim": "#c9c6c0",
+                        "surface-dim": "#dcd9d9",
+                        "on-primary-container": "#a1d4a8",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed-variant": "#22502e",
+                        "primary-fixed-dim": "#a0d3a7",
+                        "tertiary-container": "#55534e",
+                        "on-secondary-fixed-variant": "#733510",
+                        "surface-tint": "#3a6844"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "20px",
+                        "sm": "12px",
+                        "gutter": "16px",
+                        "container-margin": "20px",
+                        "base": "8px",
+                        "xs": "4px",
+                        "lg": "32px",
+                        "xl": "48px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "label-md": ["Plus Jakarta Sans"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "headline-sm": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "label-sm": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .shadow-soft {
+            box-shadow: 0 12px 24px rgba(47, 93, 58, 0.08);
+        }
+
+        .shadow-ambient {
+            box-shadow: 0 4px 12px rgba(47, 93, 58, 0.08);
+        }
+        
+        /* Custom input glow */
+        .input-glow:focus {
+            box-shadow: 0 0 0 4px rgba(22, 69, 37, 0.1);
+        }
+
+        /* Range slider styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2px solid #164525;
+            cursor: pointer;
+            margin-top: -10px;
+            box-shadow: 0 2px 6px rgba(47, 93, 58, 0.15);
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #e4e2e1;
+            border-radius: 2px;
+        }
+        
+        .scanner-line {
+            animation: scan 2s linear infinite;
+        }
+        
+        @keyframes scan {
+            0% { top: 0; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen pb-xl antialiased">
+<!-- Top Navigation (Contextual Task - No Bottom Nav) -->
+<header class="sticky top-0 z-40 bg-background shadow-sm flex justify-between items-center w-full px-container-margin py-base max-w-7xl mx-auto">
+<button aria-label="Close" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">close</span>
+</button>
+<h1 class="text-headline-sm-mobile font-headline-sm-mobile text-primary font-bold">Add to Pantry</h1>
+<div class="w-10 h-10"></div> <!-- Spacer for alignment -->
+</header>
+<main class="max-w-2xl mx-auto w-full px-container-margin mt-md">
+<!-- Scanner Area -->
+<div class="relative w-full aspect-square md:aspect-video rounded-xl overflow-hidden shadow-ambient mb-lg">
+<img alt="A carton of organic whole milk sitting on a kitchen counter top." class="w-full h-full object-cover filter brightness-90" data-alt="A close-up, high-quality photograph of a carton of organic whole milk sitting on a clean, light-colored kitchen counter. The lighting is soft and natural, suggesting a bright morning. The aesthetic is clean, minimal, and aligns with a modern homestead feel, using creamy whites and subtle earthy tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMD0OJd6WtPXWDEghmR1s-rRCSiRWwf-9Epni9sIfFqKgPhcjvPxb4T5eMh_4cFXsMUV4lypisyXAVwD4FMK24tLqkJcc3D7adnohS1pKtluj39TNtjymAKdSrJqA-xBWJxqcs3YHuASd7pDFpXcRdv4WfJsLX2ed5OaeV_oZBCx-2IjveYq0ioDkPwza8Bh86Oy9zpLSGRAxdhb12c1t-LH7cS7SHwYZ2C4CJcfzXjNXBSNsUBYDSuu59gwoZNqPMEdynmANCYqo">
+<!-- Scanner Overlay -->
+<div class="absolute inset-0 border-4 border-primary/30 m-4 rounded-lg pointer-events-none">
+<div class="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-lg"></div>
+<div class="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-lg"></div>
+<div class="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-lg"></div>
+<div class="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-lg"></div>
+<!-- Scanning Line -->
+<div class="absolute left-0 right-0 h-0.5 bg-primary scanner-line shadow-[0_0_8px_#164525]"></div>
+</div>
+<!-- Status Badge -->
+<div class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-surface-container-lowest/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">check_circle</span>
+<span class="text-label-md font-label-md text-primary">Item Recognized</span>
+</div>
+</div>
+<!-- Form Area -->
+<form class="space-y-md bg-surface-container-lowest rounded-xl p-md shadow-soft">
+<!-- Name -->
+<div class="flex flex-col gap-xs">
+<label class="text-label-md font-label-md text-on-surface-variant" for="itemName">Item Name</label>
+<input class="w-full bg-surface-container-lowest border border-outline/20 rounded-lg px-4 py-3 text-body-md font-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-0 input-glow transition-all" id="itemName" type="text" value="Organic Whole Milk">
+</div>
+<!-- Category & Shelf Grid -->
+<div class="grid grid-cols-2 gap-md">
+<div class="flex flex-col gap-xs">
+<label class="text-label-md font-label-md text-on-surface-variant" for="category">Category</label>
+<div class="relative">
+<select class="w-full appearance-none bg-surface-container-lowest border border-outline/20 rounded-lg px-4 py-3 text-body-md font-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-0 input-glow transition-all" id="category">
+<option selected="" value="dairy">Dairy</option>
+<option value="produce">Produce</option>
+<option value="pantry">Pantry</option>
+<option value="meat">Meat</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="text-label-md font-label-md text-on-surface-variant" for="shelf">Storage Location</label>
+<div class="relative">
+<select class="w-full appearance-none bg-surface-container-lowest border border-outline/20 rounded-lg px-4 py-3 text-body-md font-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-0 input-glow transition-all" id="shelf">
+<option selected="" value="door">Fridge Door</option>
+<option value="top_shelf">Top Shelf</option>
+<option value="crisper">Crisper Drawer</option>
+<option value="pantry">Pantry Shelves</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+</div>
+</div>
+<div class="h-px w-full bg-primary/10 my-4"></div>
+<!-- Quantity Slider -->
+<div class="flex flex-col gap-sm">
+<div class="flex justify-between items-center">
+<label class="text-label-md font-label-md text-on-surface-variant">Current Quantity</label>
+<span class="text-label-md font-label-md text-primary bg-primary/10 px-2 py-1 rounded-md">80% Full</span>
+</div>
+<div class="relative pt-2 pb-4">
+<div class="absolute left-0 top-3 h-1 bg-primary rounded-l-sm z-10" style="width: 80%;"></div>
+<input class="w-full relative z-20" max="100" min="0" type="range" value="80">
+</div>
+</div>
+<!-- Dates Grid -->
+<div class="grid grid-cols-2 gap-md">
+<div class="flex flex-col gap-xs">
+<label class="text-label-md font-label-md text-on-surface-variant" for="buyDate">Purchased On</label>
+<div class="relative">
+<input class="w-full bg-surface-container-lowest border border-outline/20 rounded-lg px-4 py-3 text-body-md font-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-0 input-glow transition-all" id="buyDate" type="date" value="2023-10-10">
+</div>
+</div>
+<div class="flex flex-col gap-xs">
+<div class="flex justify-between items-center">
+<label class="text-label-md font-label-md text-on-surface-variant" for="expDate">Expiry Date</label>
+<span class="text-[10px] font-semibold tracking-wider uppercase text-secondary bg-secondary/10 px-1.5 py-0.5 rounded">Estimated</span>
+</div>
+<div class="relative">
+<input class="w-full bg-surface-container-lowest border border-outline/20 rounded-lg px-4 py-3 text-body-md font-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-0 input-glow transition-all" id="expDate" type="date" value="2023-10-24">
+</div>
+</div>
+</div>
+<!-- Action Button -->
+<div class="pt-md mt-lg border-t border-primary/10">
+<button class="w-full bg-primary text-on-primary text-label-md font-label-md py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-primary-container transition-colors shadow-ambient" type="button">
+<span class="material-symbols-outlined" data-weight="fill" style="font-variation-settings: 'FILL' 1;">kitchen</span>
+                    Save to Fridge
+                </button>
+<button class="w-full mt-sm text-on-surface-variant text-label-md font-label-md py-3 rounded-xl hover:bg-surface-container-highest transition-colors" type="button">
+                    Cancel
+                </button>
+</div>
+</form>
+</main>
+</body></html>
