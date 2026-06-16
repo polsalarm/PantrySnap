@@ -28,16 +28,18 @@ What's still missing / needed to add. Living doc. ✅ done · ⬜ todo · 🔑 n
 
 ---
 
-## ⬜ P6 — AI features (Gemini) — NOT STARTED
+## 🟡 P6 — AI features (Gemini) — BACKEND DONE, frontend pending
 
-New proxy endpoints (same `server/`, key-gated so they no-op cleanly without a key):
+Backend endpoints built in `server/` (key-gated → 503 until `GEMINI_API_KEY` set):
 
-- ⬜ `POST /api/detect` — photo → `{name, category, qty%}[]` (`gemini-2.5-flash` vision); reconcile names vs Open Food Facts.
-- ⬜ `POST /api/recipe/generate` — on-hand + near-expiry → full recipe (`gemini-2.5-pro`), grounded by `/api/recipes`.
-- ⬜ `POST /api/chat` — conversational over pantry data (`gemini-2.5-flash`) + Google Search grounding.
-- ⬜ Smart tips (storage/usage) grounded by FoodKeeper.
+- ✅ `POST /api/detect` — photo → `{name, category, quantityPct}[]` (`gemini-2.5-flash` vision, JSON schema).
+- ✅ `POST /api/recipe/generate` — on-hand + near-expiry → full recipe (`gemini-2.5-pro`), grounded by `/api/recipes` seed.
+- ✅ `POST /api/chat` — conversational over pantry data (`gemini-2.5-flash`) + Google Search grounding.
+- ✅ `/api/health` reports `aiEnabled`.
+- ⬜ Live test against real Gemini key (needs `GEMINI_API_KEY` in `server/.env`).
+- ⬜ Smart tips as a dedicated endpoint (currently folded into chat).
 
-Frontend wiring for P6:
+Frontend wiring for P6 (not started):
 - ⬜ Add-item **scan** flow: call `/api/detect`, pre-fill `ItemForm` from the result.
 - ⬜ **Chat** page/tab (design exists: `design/screens/06-chat-assistant.png`) — not built in frontend yet.
 - ⬜ "Generate recipe" button on Recipes page → `/api/recipe/generate`.
