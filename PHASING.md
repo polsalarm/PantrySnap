@@ -65,9 +65,9 @@ Mobile-first PWA. Local-first MVP, cloud later. Each phase ships something usabl
 
 ## Phase 5 — AI features
 **Goal:** AI does the tedious work.
-- Thin backend proxy (serverless) holding Claude API key — never on PWA client
-- **Photo item detection:** shelf photo → Claude vision → `{name, category, qty%}[]`, pre-fills add form
-- **AI recipe generation:** on-hand + near-expiry list → Claude → full recipe (ingredients + steps)
+- Thin backend proxy (serverless) holding Gemini API key — never on PWA client
+- **Photo item detection:** shelf photo → Gemini vision → `{name, category, qty%}[]`, pre-fills add form
+- **AI recipe generation:** on-hand + near-expiry list → Gemini → full recipe (ingredients + steps)
 - **Smart tips:** storage/usage suggestions, cook-first nudges, waste reduction
 - **Chat assistant:** conversational over pantry data ("what's expiring?", "what can I cook?")
 - Graceful offline fallback (AI features degrade, core tracking still works)

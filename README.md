@@ -39,12 +39,12 @@ Built as a **mobile-first PWA** (installable, offline-capable).
 | **Local data** | IndexedDB via Dexie (offline-first; items + photos as blobs) |
 | **Camera** | Device camera via `<input capture>` / `getUserMedia` |
 | **Notifications** | Web Notifications API + service worker |
-| **AI** | Claude (Anthropic) — vision for item detection, text for recipes / tips / chat |
+| **AI** | Google Gemini — multimodal (vision) for item detection, text for recipes / tips / chat |
 | **AI backend** | Thin serverless proxy (keeps API key off the client) |
 | **Cloud (later)** | Supabase / Firebase — sync + auth across devices |
 
 > **Local-first.** The app works fully offline for tracking. AI features call out to a
-> small backend proxy — the Claude API key **never** lives in the PWA client.
+> small backend proxy — the Gemini API key **never** lives in the PWA client.
 
 ---
 
@@ -54,16 +54,16 @@ The PWA is a public client, so it **cannot** safely hold an API key. AI calls ro
 a thin backend proxy:
 
 ```
-PWA client ──(photo / prompt)──▶ Backend proxy ──▶ Claude API
-                                  (holds API key,    (vision + text)
+PWA client ──(photo / prompt)──▶ Backend proxy ──▶ Gemini API
+                                  (holds API key,    (multimodal + text)
                                    rate-limits)
 ```
 
-- **Item detection:** shelf photo → Claude vision → structured `{name, category, qty%}[]`
-- **Recipe generation:** on-hand + near-expiry list → Claude → recipe (ingredients + steps)
-- **Tips / chat:** pantry context → Claude → suggestions / answers
+- **Item detection:** shelf photo → Gemini vision → structured `{name, category, qty%}[]`
+- **Recipe generation:** on-hand + near-expiry list → Gemini → recipe (ingredients + steps)
+- **Tips / chat:** pantry context → Gemini → suggestions / answers
 
-Models: latest Claude family (`claude-opus-4-8` for quality, `claude-haiku-4-5` for fast/cheap
+Models: Google Gemini family (`gemini-2.5-pro` for quality, `gemini-2.5-flash` for fast/cheap
 calls). Configure provider + key in the backend `.env` — see `.env.example` (added during setup).
 
 ---
