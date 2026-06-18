@@ -11,6 +11,9 @@ export interface DetectedItem {
   name: string;
   category: string;
   quantityPct: number;
+  freshnessNote?: string;
+  expirationNote?: string;
+  confidence?: number;
 }
 
 /** Photo -> list of pantry items (gemini-2.5-flash vision). */
@@ -26,7 +29,11 @@ export async function detectItems(imageBase64: string, mimeType: string): Promis
             text:
               'Identify the distinct food/grocery items on this fridge or pantry shelf. ' +
               `For each, give name, a category from this list [${CATEGORIES}], and an ` +
-              'estimated quantity remaining as a percentage (0-100). Only real food items.',
+              'estimated quantity remaining as a percentage (0-100). Also note visible freshness ' +
+              'signals such as browning, wilting, damaged packaging, mold, cloudy liquid, or whether ' +
+              'no visual issue is visible. Give a short expirationNote explaining how the photo can ' +
+              'or cannot affect the shelf-life estimate. Do not claim food is safe from image alone. ' +
+              'Only real food items.',
           },
         ],
       },
@@ -41,6 +48,9 @@ export async function detectItems(imageBase64: string, mimeType: string): Promis
             name: { type: Type.STRING },
             category: { type: Type.STRING },
             quantityPct: { type: Type.NUMBER },
+            freshnessNote: { type: Type.STRING },
+            expirationNote: { type: Type.STRING },
+            confidence: { type: Type.NUMBER },
           },
           required: ['name', 'category', 'quantityPct'],
         },
