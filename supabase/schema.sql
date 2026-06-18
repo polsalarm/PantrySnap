@@ -11,6 +11,7 @@ create table if not exists public.items (
   purchase_date           date,
   expiry_date             date,
   expiry_source           text not null default 'manual',
+  condition_notes         text,
   low_stock_threshold_pct int  not null default 20,
   created_at              bigint not null,
   updated_at              bigint not null
