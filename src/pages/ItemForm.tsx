@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { db, SHELF_SEED, withUid, type ExpirySource, type ShelfId } from '../lib/db';
 import { CATEGORIES, estimateExpiryDate, estimateShelfLifeDays } from '../lib/expiry';
-import { fetchShelfLife, detectItems, blobToBase64, aiErrorMessage, type Storage } from '../lib/api';
+import { analyzeExpiry, detectItems, blobToBase64, aiErrorMessage, type Storage } from '../lib/api';
 import { useAuth } from '../lib/useAuth';
 import Icon from '../components/Icon';
 import PhotoThumb from '../components/PhotoThumb';
@@ -19,11 +19,16 @@ function addDays(dateIso: string, days: number): string {
 }
 
 interface EstimateInfo {
-  days: number;
+  days: number; // adjusted days that set the expiry date
+  baselineDays?: number; // pre-adjustment FoodKeeper baseline
   category: string;
   storage: Storage;
-  source: 'foodkeeper' | 'local';
+  source: 'foodkeeper' | 'foodkeeper+ai' | 'local';
   matched: boolean;
+  reasoning?: string[];
+  confidence?: 'low' | 'medium' | 'high';
+  safetyNote?: string;
+  analyzing?: boolean;
 }
 
 const initialEstimate = (category: string, shelfId: ShelfId): EstimateInfo => ({
@@ -95,21 +100,46 @@ export default function ItemForm() {
     });
   }, [isEdit, itemId]);
 
-  // Refine an estimated expiry from the Phase 5 data layer (USDA FoodKeeper).
-  // Instant local estimate stays as the offline fallback; backend overrides it when reachable.
-  async function refineEstimate(purchase: string, cat: string, shelf: ShelfId) {
-    const res = await fetchShelfLife(cat, storageForShelf(shelf));
+  // Refine the estimated expiry via the backend analyzer (FoodKeeper baseline +
+  // condition-note rules + optional AI reasoning). Instant local estimate stays
+  // as the offline fallback; backend overrides it when reachable.
+  async function refineEstimate(
+    purchase: string,
+    cat: string,
+    shelf: ShelfId,
+    notesOverride?: string,
+    photoOverride?: string,
+  ) {
+    const storage = storageForShelf(shelf);
+    const notes = (notesOverride ?? conditionNotes).trim();
+    const photoNote = photoOverride ?? visualAnalysis ?? '';
+    setEstimateInfo((prev) => ({ ...prev, analyzing: true }));
+    const res = await analyzeExpiry({
+      name: name.trim() || undefined,
+      category: cat,
+      storage,
+      purchaseDate: purchase,
+      expiryDateCurrent: expiryDate,
+      conditionNotes: notes || undefined,
+      photoAnalysis: photoNote ? { freshnessNote: photoNote } : undefined,
+    });
     if (res) {
-      setExpiryDate(addDays(purchase, res.days));
+      setExpiryDate(res.estimatedExpiryDate);
       setEstimateInfo({
-        days: res.days,
-        category: res.category,
-        storage: res.storage,
-        source: res.source === 'foodkeeper' ? 'foodkeeper' : 'local',
-        matched: res.matched,
+        days: res.adjustedDays,
+        baselineDays: res.baselineDays,
+        category: cat,
+        storage,
+        source: res.source,
+        matched: true,
+        reasoning: res.reasoning,
+        confidence: res.confidence,
+        safetyNote: res.safetyNote,
       });
       return;
     }
+    // Offline: keep the instant local estimate.
+    setExpiryDate(addDays(purchase, estimateShelfLifeDays(cat)));
     setEstimateInfo(initialEstimate(cat, shelf));
   }
 
@@ -150,7 +180,13 @@ export default function ItemForm() {
       .map((part) => part.trim())
       .filter(Boolean);
     if (parts.some((part) => part.toLowerCase() === note.toLowerCase())) return;
-    setConditionNotes([...parts, note].join(', '));
+    const next = [...parts, note].join(', ');
+    setConditionNotes(next);
+    if (expirySource === 'estimated') void refineEstimate(purchaseDate, category, shelfId, next);
+  }
+
+  function handleConditionNotesBlur() {
+    if (expirySource === 'estimated') void refineEstimate(purchaseDate, category, shelfId);
   }
 
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -179,13 +215,12 @@ export default function ItemForm() {
         if (typeof top.quantityPct === 'number') {
           setQuantityPct(Math.round(top.quantityPct));
         }
-        setVisualAnalysis(
-          [top.freshnessNote, top.expirationNote].filter(Boolean).join(' '),
-        );
+        const photoNote = [top.freshnessNote, top.expirationNote].filter(Boolean).join(' ');
+        setVisualAnalysis(photoNote);
         if (expirySource === 'estimated') {
           setExpiryDate(estimateExpiryDate(purchaseDate, cat));
           setEstimateInfo(initialEstimate(cat, shelfId));
-          void refineEstimate(purchaseDate, cat, shelfId);
+          void refineEstimate(purchaseDate, cat, shelfId, undefined, photoNote);
         }
         setScanMsg(`Recognized: ${top.name}`);
       } else {
@@ -340,6 +375,7 @@ export default function ItemForm() {
             <textarea
               value={conditionNotes}
               onChange={(e) => setConditionNotes(e.target.value)}
+              onBlur={handleConditionNotesBlur}
               placeholder="e.g. opened yesterday, sealed, smells off, mold visible"
               rows={3}
               className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary resize-none"
@@ -418,22 +454,59 @@ function ExpiryAnalysis({
   hasPhoto: boolean;
 }) {
   const sourceLabel =
-    estimateInfo.source === 'foodkeeper'
-      ? 'FoodKeeper shelf-life data'
-      : 'local category fallback';
+    estimateInfo.source === 'foodkeeper+ai'
+      ? 'FoodKeeper data + AI review'
+      : estimateInfo.source === 'foodkeeper'
+        ? 'FoodKeeper shelf-life data'
+        : 'local category fallback';
+  const adjusted =
+    estimateInfo.baselineDays !== undefined && estimateInfo.baselineDays !== estimateInfo.days;
   return (
     <div className="animate-in bg-surface border border-border rounded-2xl p-4 card-shadow">
-      <div className="flex items-center gap-2 text-text font-semibold">
-        <Icon name="psychology" className="text-primary" filled />
-        Expiry analysis
+      <div className="flex items-center justify-between gap-2 text-text font-semibold">
+        <span className="flex items-center gap-2">
+          <Icon name="psychology" className="text-primary" filled />
+          Expiry analysis
+        </span>
+        {estimateInfo.analyzing ? (
+          <span className="text-xs font-semibold text-primary flex items-center gap-1">
+            <Icon name="auto_awesome" /> Analyzing…
+          </span>
+        ) : (
+          expirySource === 'estimated' &&
+          estimateInfo.confidence && (
+            <span className="text-xs font-semibold text-text-muted capitalize bg-bg px-2 py-0.5 rounded-full">
+              {estimateInfo.confidence} confidence
+            </span>
+          )
+        )}
       </div>
-      <p className="text-sm leading-relaxed text-text-muted mt-2">
-        {expirySource === 'manual'
-          ? 'You manually set this date, so PantrySnap will not override it.'
-          : `Estimated as purchase date + ${estimateInfo.days} days for ${estimateInfo.category} stored in ${estimateInfo.storage}. Source: ${sourceLabel}${
-              estimateInfo.matched ? '' : ' using the closest default match'
-            }.`}
-      </p>
+
+      {expirySource === 'manual' ? (
+        <p className="text-sm leading-relaxed text-text-muted mt-2">
+          You manually set this date, so PantrySnap will not override it.
+        </p>
+      ) : (
+        <>
+          <p className="text-sm leading-relaxed text-text-muted mt-2">
+            Estimated as purchase date + {estimateInfo.days} days for {estimateInfo.category} stored
+            in {estimateInfo.storage}.
+            {adjusted && ` Baseline ${estimateInfo.baselineDays} days, adjusted for condition.`}{' '}
+            Source: {sourceLabel}.
+          </p>
+          {estimateInfo.reasoning && estimateInfo.reasoning.length > 0 && (
+            <ul className="mt-2 flex flex-col gap-1">
+              {estimateInfo.reasoning.map((r, i) => (
+                <li key={i} className="text-sm leading-relaxed text-text-muted flex gap-2">
+                  <span className="text-primary">•</span>
+                  <span>{r}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
+
       <p className="text-sm leading-relaxed text-text-muted mt-2">
         {visualAnalysis ||
           (hasPhoto
@@ -443,6 +516,12 @@ function ExpiryAnalysis({
       {conditionNotes.trim() && (
         <p className="text-sm leading-relaxed text-accent-dark mt-2">
           User notes to consider: {conditionNotes.trim()}
+        </p>
+      )}
+      {estimateInfo.safetyNote && expirySource !== 'manual' && (
+        <p className="text-sm leading-relaxed text-danger mt-2 flex gap-2">
+          <Icon name="warning" className="shrink-0" />
+          <span>{estimateInfo.safetyNote}</span>
         </p>
       )}
     </div>
