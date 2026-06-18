@@ -27,13 +27,16 @@ export async function detectItems(imageBase64: string, mimeType: string): Promis
           { inlineData: { mimeType, data: imageBase64 } },
           {
             text:
-              'Identify the distinct food/grocery items on this fridge or pantry shelf. ' +
-              `For each, give name, a category from this list [${CATEGORIES}], and an ` +
-              'estimated quantity remaining as a percentage (0-100). Also note visible freshness ' +
-              'signals such as browning, wilting, damaged packaging, mold, cloudy liquid, or whether ' +
-              'no visual issue is visible. Give a short expirationNote explaining how the photo can ' +
-              'or cannot affect the shelf-life estimate. Do not claim food is safe from image alone. ' +
-              'Only real food items.',
+              'Identify the distinct food/grocery items in this photo. Look carefully: read any ' +
+              'visible packaging text, brand, and labels, and use shape, color, and size as clues. ' +
+              `For each item give: name (specific — e.g. "whole milk" not "drink"), a category from ` +
+              `this list [${CATEGORIES}], and an estimated quantity remaining as a percentage (0-100). ` +
+              'Note visible freshness signals (browning, wilting, damaged packaging, mold, cloudy ' +
+              'liquid) or that no visual issue is visible, in freshnessNote. In expirationNote, say ' +
+              'how the photo can or cannot affect the shelf-life estimate. Set confidence 0..1 ' +
+              'honestly: lower it when the image is blurry, dark, partial, far away, or the item is ' +
+              'ambiguous. If you genuinely cannot tell what an item is, omit it rather than guessing. ' +
+              'Do not claim food is safe from the image alone. Only real food items.',
           },
         ],
       },
