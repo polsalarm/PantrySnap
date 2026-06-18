@@ -2,6 +2,7 @@
 // optional explanation layer only. The numbers are always deterministic so the
 // feature works offline and never relies on the model to assert food safety.
 import { getShelfLife, type Storage } from './shelflife.js';
+import { lookupProduct } from './openfoodfacts.js';
 import { aiEnabled } from '../lib/gemini.js';
 import { gemini, MODELS } from '../lib/gemini.js';
 
@@ -24,11 +25,14 @@ export interface ExpiryRequest {
 export interface ExpiryResult {
   estimatedExpiryDate: string;
   baselineDays: number;
-  adjustedDays: number;
+  baselineMinDays: number;
+  baselineMaxDays: number;
+  dataSource: string; // e.g. "USDA FoodKeeper" or "estimate"
   source: 'foodkeeper' | 'foodkeeper+ai';
   confidence: 'low' | 'medium' | 'high';
   reasoning: string[];
   safetyNote: string;
+  adjustedDays: number;
 }
 
 const SAFETY_NOTE =
@@ -53,7 +57,26 @@ function hasAny(haystack: string, needles: string[]): boolean {
 /** Deterministic baseline + condition adjustment. AI never changes the numbers. */
 export async function analyzeExpiry(req: ExpiryRequest): Promise<ExpiryResult> {
   const storage: Storage = req.storage ?? 'fridge';
-  const shelf = getShelfLife(req.category, storage);
+  let shelf = getShelfLife(req.category, storage);
+
+  // Open Food Facts: when the category didn't match (likely a packaged product),
+  // try to identify it by name and re-derive the baseline from a better category.
+  let offNote: string | undefined;
+  if (!shelf.matched && req.name?.trim()) {
+    try {
+      const off = await lookupProduct(req.name.trim());
+      if (off.matched && off.category !== 'default') {
+        const better = getShelfLife(off.category, storage);
+        if (better.matched) {
+          shelf = better;
+          offNote = `Identified "${off.name}" via Open Food Facts as ${off.category}.`;
+        }
+      }
+    } catch {
+      // Network/timeout — keep the local baseline.
+    }
+  }
+
   const baselineDays = shelf.days;
 
   const notes = (req.conditionNotes ?? '').toLowerCase();
@@ -65,11 +88,18 @@ export async function analyzeExpiry(req: ExpiryRequest): Promise<ExpiryResult> {
 
   let adjustedDays = baselineDays;
   let confidence: ExpiryResult['confidence'] = shelf.matched ? 'medium' : 'low';
-  const reasoning: string[] = [
+  const rangeText =
+    shelf.minDays === shelf.maxDays
+      ? `${shelf.maxDays} days`
+      : `${shelf.minDays}–${shelf.maxDays} days (baseline uses ${shelf.maxDays})`;
+  const reasoning: string[] = [];
+  if (offNote) reasoning.push(offNote);
+  reasoning.push(
     shelf.matched
-      ? `FoodKeeper baseline for ${shelf.category} in ${storage} is ${baselineDays} days.`
-      : `No exact FoodKeeper match for "${req.category}"; using default ${baselineDays} days in ${storage}.`,
-  ];
+      ? `${shelf.source} range for ${shelf.category} in ${storage}: ${rangeText}.`
+      : `No exact match for "${req.category}"; using a default ${baselineDays}-day estimate in ${storage}.`,
+  );
+  if (shelf.notes) reasoning.push(shelf.notes);
 
   const highRisk = hasAny(allText, HIGH_RISK);
   if (highRisk) {
@@ -110,6 +140,9 @@ export async function analyzeExpiry(req: ExpiryRequest): Promise<ExpiryResult> {
   return {
     estimatedExpiryDate: addDays(req.purchaseDate, adjustedDays),
     baselineDays,
+    baselineMinDays: shelf.minDays,
+    baselineMaxDays: shelf.maxDays,
+    dataSource: shelf.source,
     adjustedDays,
     source,
     confidence,
