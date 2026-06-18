@@ -179,10 +179,18 @@ export interface DetectedItem {
   confidence?: number;
 }
 
-/** Photo (data URL or raw base64) -> detected items. Throws ApiError on failure. */
-export async function detectItems(imageBase64: string, mimeType: string): Promise<DetectedItem[]> {
-  const data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
-  const res = await postJson<{ items: DetectedItem[] }>('/detect', { imageBase64: data, mimeType });
+/**
+ * Photo(s) -> detected items. Pass several angles of the same item for a more
+ * accurate identification. Accepts data URLs or raw base64. Throws ApiError on failure.
+ */
+export async function detectItems(
+  photos: { imageBase64: string; mimeType: string }[],
+): Promise<DetectedItem[]> {
+  const images = photos.map((p) => ({
+    imageBase64: p.imageBase64.includes(',') ? p.imageBase64.split(',')[1] : p.imageBase64,
+    mimeType: p.mimeType,
+  }));
+  const res = await postJson<{ items: DetectedItem[] }>('/detect', { images });
   return res.items;
 }
 
