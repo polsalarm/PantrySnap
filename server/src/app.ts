@@ -9,6 +9,7 @@ import { lookupProduct } from './sources/openfoodfacts.js';
 import { findRecipes } from './sources/recipes.js';
 import { aiEnabled, aiMode } from './lib/gemini.js';
 import { detectItems, generateRecipe, chat, type ChatMessage } from './sources/ai.js';
+import { analyzeExpiry, type ExpiryRequest } from './sources/expiry.js';
 import { verifyToken, bearer, authRequired } from './lib/auth.js';
 import { checkRate } from './lib/ratelimit.js';
 
@@ -51,6 +52,23 @@ app.get('/api/recipes', async (c) => {
   const limit = Math.min(Math.max(Number(c.req.query('limit')) || 10, 1), 25);
   if (have.length === 0) return c.json({ error: 'have query param required (csv)' }, 400);
   return c.json({ recipes: await findRecipes(have, expiring, limit) });
+});
+
+// POST /api/expiry/analyze  -> deterministic expiry estimate (+ optional AI reasoning).
+// Public: numbers are rule-based, so it works without auth/AI; AI is best-effort inside.
+app.post('/api/expiry/analyze', async (c) => {
+  const body = (await c.req.json().catch(() => null)) as ExpiryRequest | null;
+  if (!body?.category || !body?.purchaseDate) {
+    return c.json({ error: 'category and purchaseDate required' }, 400);
+  }
+  if (body.storage && !['fridge', 'freezer', 'pantry'].includes(body.storage)) {
+    return c.json({ error: 'storage must be fridge|freezer|pantry' }, 400);
+  }
+  try {
+    return c.json(await analyzeExpiry(body));
+  } catch (e) {
+    return c.json({ error: 'analyze failed', detail: String(e) }, 502);
+  }
 });
 
 // ---- Phase 6: AI (Gemini). Gated: AI configured + authed user + rate limit. ----
