@@ -228,9 +228,19 @@ export default function ItemForm() {
           setEstimateInfo(initialEstimate(cat, shelfId));
           void refineEstimate(purchaseDate, cat, shelfId, undefined, photoNote);
         }
-        setScanMsg(`Recognized: ${top.name}`);
+        const conf = typeof top.confidence === 'number' ? top.confidence : undefined;
+        if (conf !== undefined && conf < 0.6) {
+          setScanMsg(
+            `Recognized "${top.name}" but not confident (${Math.round(conf * 100)}%). ` +
+              'Retake closer, in better light, or from a different angle for a more accurate scan.',
+          );
+        } else {
+          setScanMsg(
+            `Recognized: ${top.name}${conf !== undefined ? ` (${Math.round(conf * 100)}% confident)` : ''}`,
+          );
+        }
       } else {
-        setScanMsg('No item recognized — fill in manually.');
+        setScanMsg('No item recognized — retake from a different angle with good lighting, or fill in manually.');
       }
     } catch (err) {
       setScanMsg(aiErrorMessage(err));
@@ -291,9 +301,10 @@ export default function ItemForm() {
         <div className="bg-primary-soft/35 border border-primary-soft rounded-2xl p-4 flex items-start gap-3">
           <Icon name="center_focus_strong" className="text-primary shrink-0" />
           <p className="text-sm leading-relaxed text-text-muted">
-            For better analysis, scan or upload a clear food photo. AI can identify the item,
-            category, quantity, and visible freshness clues; manual entry only uses category and
-            storage estimates.
+            For better analysis, center one item in a clear, well-lit photo and keep labels facing
+            the camera. AI identifies the item, category, quantity, and visible freshness clues. If
+            it guesses wrong or low-confidence, retake from a different angle or closer. Manual entry
+            only uses category and storage estimates.
           </p>
         </div>
 
