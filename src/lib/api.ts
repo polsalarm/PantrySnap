@@ -72,9 +72,9 @@ export async function fetchRecipes(
 // Imported dynamically so the Supabase SDK stays out of the main bundle.
 async function authHeader(): Promise<Record<string, string>> {
   try {
-    const { cloudEnabled, supabase } = await import('./supabase');
+    const { cloudEnabled, getSupabase } = await import('./supabase');
     if (!cloudEnabled) return {};
-    const { data } = await supabase().auth.getSession();
+    const { data } = await (await getSupabase()).auth.getSession();
     const token = data.session?.access_token;
     return token ? { Authorization: `Bearer ${token}` } : {};
   } catch {
@@ -129,6 +129,9 @@ export interface DetectedItem {
   name: string;
   category: string;
   quantityPct: number;
+  freshnessNote?: string;
+  expirationNote?: string;
+  confidence?: number;
 }
 
 /** Photo (data URL or raw base64) -> detected items. Throws ApiError on failure. */
