@@ -16,17 +16,33 @@ export interface DetectedItem {
   confidence?: number;
 }
 
-/** Photo -> list of pantry items (gemini-2.5-flash vision). */
-export async function detectItems(imageBase64: string, mimeType: string): Promise<DetectedItem[]> {
+export interface DetectImage {
+  imageBase64: string;
+  mimeType: string;
+}
+
+/** Photo(s) -> list of pantry items (gemini-2.5-flash vision). Multiple images are
+ *  treated as different angles/lighting of the SAME items for a more accurate ID. */
+export async function detectItems(images: DetectImage[]): Promise<DetectedItem[]> {
+  if (images.length === 0) return [];
+  const multi = images.length > 1;
+  const imageParts = images.map((im) => ({
+    inlineData: { mimeType: im.mimeType, data: im.imageBase64 },
+  }));
   const res = await gemini().models.generateContent({
     model: MODELS.flash,
     contents: [
       {
         role: 'user',
         parts: [
-          { inlineData: { mimeType, data: imageBase64 } },
+          ...imageParts,
           {
             text:
+              (multi
+                ? `These ${images.length} photos show the SAME item(s) from different angles or ` +
+                  'lighting. Combine all of them for one accurate identification — use whichever ' +
+                  'angle best shows labels, brand, or freshness. Do not double-count the same item. '
+                : '') +
               'Identify the distinct food/grocery items in this photo. Look carefully: read any ' +
               'visible packaging text, brand, and labels, and use shape, color, and size as clues. ' +
               `For each item give: name (specific — e.g. "whole milk" not "drink"), a category from ` +
