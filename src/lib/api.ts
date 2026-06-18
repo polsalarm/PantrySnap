@@ -51,6 +51,9 @@ export async function fetchShelfLife(
 export interface ExpiryAnalysisResp {
   estimatedExpiryDate: string;
   baselineDays: number;
+  baselineMinDays: number;
+  baselineMaxDays: number;
+  dataSource: string;
   adjustedDays: number;
   source: 'foodkeeper' | 'foodkeeper+ai';
   confidence: 'low' | 'medium' | 'high';
