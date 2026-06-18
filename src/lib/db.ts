@@ -15,6 +15,7 @@ export interface Item {
   purchaseDate: string; // ISO date (yyyy-mm-dd)
   expiryDate: string; // ISO date (yyyy-mm-dd)
   expirySource: ExpirySource;
+  conditionNotes?: string;
   lowStockThresholdPct: number;
   createdAt: number;
   updatedAt: number;
