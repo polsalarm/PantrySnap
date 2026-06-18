@@ -23,6 +23,18 @@ interface RecipeCard {
   steps: string[];
 }
 
+function normalized(value: string): string {
+  return value.toLowerCase().trim();
+}
+
+function missingIngredients(ingredients: string[], have: string[]): string[] {
+  const onHand = have.map(normalized).filter(Boolean);
+  return ingredients.filter((ingredient) => {
+    const needle = normalized(ingredient);
+    return !onHand.some((item) => needle.includes(item) || item.includes(needle));
+  });
+}
+
 function expiringNames(items: Item[]): string[] {
   return items.filter((i) => expiryStatus(i.expiryDate) !== 'fresh').map((i) => i.name);
 }
@@ -31,6 +43,7 @@ export default function Recipes() {
   const items = useLiveQuery(() => db.items.toArray(), []) ?? [];
   const [cards, setCards] = useState<RecipeCard[]>([]);
   const [online, setOnline] = useState(true);
+  const [recipesBusy, setRecipesBusy] = useState(false);
   const [gen, setGen] = useState<GeneratedRecipe | null>(null);
   const [genBusy, setGenBusy] = useState(false);
   const [genErr, setGenErr] = useState<string | null>(null);
@@ -56,49 +69,57 @@ export default function Recipes() {
     async function load() {
       if (items.length === 0) {
         setCards([]);
+        setRecipesBusy(false);
         return;
       }
+      setRecipesBusy(true);
       const have = items.map((i) => i.name);
       const expiring = expiringNames(items);
 
-      // Try the Phase 5 data layer first (real recipes, expiry-weighted).
-      const api = await fetchRecipes(have, expiring, 12);
-      if (cancelled) return;
+      try {
+        // Try the Phase 5 data layer first (real recipes, expiry-weighted).
+        const api = await fetchRecipes(have, expiring, 12);
+        if (cancelled) return;
 
-      if (api) {
-        setOnline(true);
-        setCards(
-          api.map((r) => ({
-            id: r.id,
-            title: r.title,
-            image: r.image,
-            matchCount: r.matchCount,
-            totalCount: r.totalCount,
-            usesExpiring: r.usesExpiring,
-            missing: r.ingredients.filter(
-              (ing) => !have.some((h) => ing.includes(h.toLowerCase()) || h.toLowerCase().includes(ing)),
-            ),
-            steps: r.steps,
-          })),
-        );
-      } else {
-        // Offline / backend down — fall back to the local seed matcher.
-        setOnline(false);
-        const expSet = new Set(expiring.map((e) => e.toLowerCase()));
-        setCards(
-          matchRecipes(items, RECIPE_SEED).map((m) => ({
-            id: m.recipe.id,
-            title: m.recipe.name,
-            emoji: m.recipe.emoji,
-            matchCount: m.matched.length,
-            totalCount: m.recipe.ingredients.length,
-            usesExpiring: m.matched.filter((ing) =>
-              [...expSet].some((e) => ing.includes(e) || e.includes(ing)),
-            ),
-            missing: m.missing,
-            steps: m.recipe.steps,
-          })),
-        );
+        if (api) {
+          setOnline(true);
+          setCards(
+            api.map((r) => {
+              const missing = missingIngredients(r.ingredients, have);
+              const totalCount = r.ingredients.length || r.totalCount;
+              return {
+                id: r.id,
+                title: r.title,
+                image: r.image,
+                matchCount: Math.max(0, totalCount - missing.length),
+                totalCount,
+                usesExpiring: r.usesExpiring,
+                missing,
+                steps: r.steps,
+              };
+            }),
+          );
+        } else {
+          // Offline / backend down — fall back to the local seed matcher.
+          setOnline(false);
+          const expSet = new Set(expiring.map((e) => e.toLowerCase()));
+          setCards(
+            matchRecipes(items, RECIPE_SEED).map((m) => ({
+              id: m.recipe.id,
+              title: m.recipe.name,
+              emoji: m.recipe.emoji,
+              matchCount: m.matched.length,
+              totalCount: m.recipe.ingredients.length,
+              usesExpiring: m.matched.filter((ing) =>
+                [...expSet].some((e) => ing.includes(e) || e.includes(ing)),
+              ),
+              missing: m.missing,
+              steps: m.recipe.steps,
+            })),
+          );
+        }
+      } finally {
+        if (!cancelled) setRecipesBusy(false);
       }
     }
     void load();
@@ -124,16 +145,26 @@ export default function Recipes() {
             {aiLocked ? (
               <AiLock label="Sign in to generate AI recipes" />
             ) : (
-              <button
-                onClick={handleGenerate}
-                disabled={genBusy}
-                className="flex items-center justify-center gap-2 bg-accent text-white font-semibold rounded-xl py-3 disabled:opacity-60"
-              >
-                <Icon name="auto_awesome" />
-                {genBusy ? 'Generating…' : 'Generate AI recipe from my items'}
-              </button>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={handleGenerate}
+                  disabled={genBusy}
+                  className={`relative overflow-hidden flex items-center justify-center gap-2 bg-accent text-white font-semibold rounded-xl py-3 disabled:opacity-80 ${
+                    auth.signedIn ? 'animate-shimmer' : ''
+                  }`}
+                >
+                  <Icon name="auto_awesome" className={genBusy ? 'animate-orbit-spark' : ''} filled />
+                  {genBusy ? 'AI is building your recipe…' : 'Generate AI recipe from my items'}
+                </button>
+                {auth.signedIn && !genBusy && (
+                  <p className="text-xs text-accent-dark text-center font-medium">
+                    AI recipe mode is ready — it prioritizes food expiring soon.
+                  </p>
+                )}
+              </div>
             )}
             {genErr && <p className="text-danger text-sm text-center">{genErr}</p>}
+            {genBusy && <AiRecipeLoading />}
             {gen && (
               <div className="bg-surface rounded-2xl p-4 card-shadow flex flex-col gap-2 border border-accent/30">
                 <div className="flex items-center gap-2">
@@ -169,12 +200,45 @@ export default function Recipes() {
               </div>
             )}
 
+            {recipesBusy && <RecipeLoadingCard online={online} />}
             {cards.map((c) => (
               <RecipeRow key={`${c.id}-${c.title}`} card={c} />
             ))}
           </div>
         )}
       </main>
+    </div>
+  );
+}
+
+function AiRecipeLoading() {
+  return (
+    <div className="animate-in bg-accent/10 border border-accent/25 rounded-2xl p-4 flex items-start gap-3">
+      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent text-white">
+        <Icon name="auto_awesome" className="animate-orbit-spark" filled />
+      </span>
+      <div>
+        <p className="font-semibold text-text">Analyzing your pantry mix</p>
+        <p className="text-sm text-text-muted mt-1">
+          Matching what you have, rescuing expiring items, then writing practical steps.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function RecipeLoadingCard({ online }: { online: boolean }) {
+  return (
+    <div className="animate-in bg-surface rounded-2xl p-4 card-shadow border border-border flex items-center gap-3">
+      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+        <Icon name={online ? 'restaurant' : 'offline_bolt'} className="animate-orbit-spark" filled />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="font-semibold text-text">
+          {online ? 'Finding recipe matches…' : 'Building local recipe matches…'}
+        </p>
+        <div className="skeleton h-2 w-full mt-2" />
+      </div>
     </div>
   );
 }
