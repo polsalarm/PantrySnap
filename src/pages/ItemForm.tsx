@@ -20,7 +20,10 @@ function addDays(dateIso: string, days: number): string {
 
 interface EstimateInfo {
   days: number; // adjusted days that set the expiry date
-  baselineDays?: number; // pre-adjustment FoodKeeper baseline
+  baselineDays?: number; // pre-adjustment baseline (max of range)
+  baselineMinDays?: number;
+  baselineMaxDays?: number;
+  dataSource?: string; // e.g. "USDA FoodKeeper"
   category: string;
   storage: Storage;
   source: 'foodkeeper' | 'foodkeeper+ai' | 'local';
@@ -128,6 +131,9 @@ export default function ItemForm() {
       setEstimateInfo({
         days: res.adjustedDays,
         baselineDays: res.baselineDays,
+        baselineMinDays: res.baselineMinDays,
+        baselineMaxDays: res.baselineMaxDays,
+        dataSource: res.dataSource,
         category: cat,
         storage,
         source: res.source,
@@ -453,14 +459,21 @@ function ExpiryAnalysis({
   conditionNotes: string;
   hasPhoto: boolean;
 }) {
+  const data = estimateInfo.dataSource ?? 'local estimate';
   const sourceLabel =
     estimateInfo.source === 'foodkeeper+ai'
-      ? 'FoodKeeper data + AI review'
+      ? `${data} + AI review`
       : estimateInfo.source === 'foodkeeper'
-        ? 'FoodKeeper shelf-life data'
+        ? data
         : 'local category fallback';
   const adjusted =
     estimateInfo.baselineDays !== undefined && estimateInfo.baselineDays !== estimateInfo.days;
+  const rangeText =
+    estimateInfo.baselineMinDays !== undefined &&
+    estimateInfo.baselineMaxDays !== undefined &&
+    estimateInfo.baselineMinDays !== estimateInfo.baselineMaxDays
+      ? `${estimateInfo.baselineMinDays}–${estimateInfo.baselineMaxDays} days`
+      : undefined;
   return (
     <div className="animate-in bg-surface border border-border rounded-2xl p-4 card-shadow">
       <div className="flex items-center justify-between gap-2 text-text font-semibold">
@@ -491,6 +504,7 @@ function ExpiryAnalysis({
           <p className="text-sm leading-relaxed text-text-muted mt-2">
             Estimated as purchase date + {estimateInfo.days} days for {estimateInfo.category} stored
             in {estimateInfo.storage}.
+            {rangeText && ` Typical range ${rangeText}.`}
             {adjusted && ` Baseline ${estimateInfo.baselineDays} days, adjusted for condition.`}{' '}
             Source: {sourceLabel}.
           </p>
