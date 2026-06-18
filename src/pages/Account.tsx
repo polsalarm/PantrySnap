@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { cloudEnabled, supabase } from '../lib/supabase';
+import { cloudEnabled, getSupabase } from '../lib/supabase';
 import { syncNow } from '../lib/sync';
 import Icon from '../components/Icon';
 
@@ -13,20 +13,24 @@ export default function Account() {
 
   useEffect(() => {
     if (!cloudEnabled) return;
-    supabase()
-      .auth.getUser()
-      .then(({ data }) => setUserEmail(data.user?.email ?? null));
-    const { data: sub } = supabase().auth.onAuthStateChange((_e, session) => {
-      setUserEmail(session?.user?.email ?? null);
-    });
-    return () => sub.subscription.unsubscribe();
+    let unsub: (() => void) | undefined;
+    (async () => {
+      const sb = await getSupabase();
+      const { data } = await sb.auth.getUser();
+      setUserEmail(data.user?.email ?? null);
+      const { data: sub } = sb.auth.onAuthStateChange((_e, session) => {
+        setUserEmail(session?.user?.email ?? null);
+      });
+      unsub = () => sub.subscription.unsubscribe();
+    })();
+    return () => unsub?.();
   }, []);
 
   async function sendLink() {
     setBusy(true);
     setStatus(null);
     try {
-      const { error } = await supabase().auth.signInWithOtp({ email: email.trim() });
+      const { error } = await (await getSupabase()).auth.signInWithOtp({ email: email.trim() });
       setStatus(error ? error.message : 'Magic link sent — check your email.');
     } finally {
       setBusy(false);
@@ -47,7 +51,7 @@ export default function Account() {
   }
 
   async function signOut() {
-    await supabase().auth.signOut();
+    await (await getSupabase()).auth.signOut();
     setUserEmail(null);
     setStatus('Signed out.');
   }
