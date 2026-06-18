@@ -48,6 +48,48 @@ export async function fetchShelfLife(
   }
 }
 
+export interface ExpiryAnalysisResp {
+  estimatedExpiryDate: string;
+  baselineDays: number;
+  adjustedDays: number;
+  source: 'foodkeeper' | 'foodkeeper+ai';
+  confidence: 'low' | 'medium' | 'high';
+  reasoning: string[];
+  safetyNote: string;
+}
+
+export interface ExpiryAnalyzeReq {
+  name?: string;
+  category: string;
+  storage: Storage;
+  purchaseDate: string;
+  expiryDateCurrent?: string;
+  conditionNotes?: string;
+  photoAnalysis?: { freshnessNote?: string; expirationNote?: string };
+}
+
+/**
+ * Deterministic expiry estimate (FoodKeeper baseline + condition rules), with
+ * optional AI reasoning. Public endpoint — no auth. Null if backend unreachable,
+ * so the caller falls back to the local estimate.
+ */
+export async function analyzeExpiry(
+  req: ExpiryAnalyzeReq,
+): Promise<ExpiryAnalysisResp | null> {
+  try {
+    const res = await fetch(`${BASE}/expiry/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req),
+      signal: AbortSignal.timeout(30000),
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as ExpiryAnalysisResp;
+  } catch {
+    return null;
+  }
+}
+
 /** Real recipes (TheMealDB/Spoonacular), expiry-weighted. Null if backend unreachable. */
 export async function fetchRecipes(
   have: string[],
