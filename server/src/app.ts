@@ -92,14 +92,24 @@ app.use('/api/detect', aiGate);
 app.use('/api/recipe/generate', aiGate);
 app.use('/api/chat', aiGate);
 
-// POST /api/detect  { imageBase64, mimeType }  -> [{name, category, quantityPct}]
+// POST /api/detect
+//   { images: [{ imageBase64, mimeType }] }  (multi-angle, more accurate), or
+//   { imageBase64, mimeType }                (legacy single)
+//   -> { items: [{name, category, quantityPct, ...}] }
 app.post('/api/detect', async (c) => {
   const body = await c.req.json().catch(() => null);
-  const imageBase64 = body?.imageBase64 as string | undefined;
-  const mimeType = (body?.mimeType as string | undefined) ?? 'image/jpeg';
-  if (!imageBase64) return c.json({ error: 'imageBase64 required' }, 400);
+  const list = Array.isArray(body?.images)
+    ? (body.images as { imageBase64?: string; mimeType?: string }[])
+    : body?.imageBase64
+      ? [{ imageBase64: body.imageBase64 as string, mimeType: body.mimeType as string }]
+      : [];
+  const images = list
+    .filter((im) => im?.imageBase64)
+    .slice(0, 4)
+    .map((im) => ({ imageBase64: im.imageBase64!, mimeType: im.mimeType ?? 'image/jpeg' }));
+  if (images.length === 0) return c.json({ error: 'imageBase64 or images[] required' }, 400);
   try {
-    return c.json({ items: await detectItems(imageBase64, mimeType) });
+    return c.json({ items: await detectItems(images) });
   } catch (e) {
     return c.json({ error: 'detect failed', detail: String(e) }, 502);
   }
