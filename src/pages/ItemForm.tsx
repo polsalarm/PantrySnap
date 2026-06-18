@@ -75,7 +75,8 @@ export default function ItemForm() {
   const [expiryDate, setExpiryDate] = useState(estimateExpiryDate(today(), CATEGORIES[0]));
   const [expirySource, setExpirySource] = useState<ExpirySource>('estimated');
   const [conditionNotes, setConditionNotes] = useState('');
-  const [photoBlob, setPhotoBlob] = useState<Blob | undefined>(undefined);
+  const [photos, setPhotos] = useState<Blob[]>([]);
+  const primaryPhoto = photos[0];
   const [scanning, setScanning] = useState(false);
   const [scanMsg, setScanMsg] = useState<string | null>(null);
   const [visualAnalysis, setVisualAnalysis] = useState<string | null>(null);
@@ -98,7 +99,7 @@ export default function ItemForm() {
       setExpiryDate(item.expiryDate);
       setExpirySource(item.expirySource);
       setConditionNotes(item.conditionNotes ?? '');
-      setPhotoBlob(item.photoBlob);
+      setPhotos(item.photoBlob ? [item.photoBlob] : []);
       setEstimateInfo(initialEstimate(item.category, item.shelfId));
     });
   }, [isEdit, itemId]);
@@ -195,10 +196,12 @@ export default function ItemForm() {
     if (expirySource === 'estimated') void refineEstimate(purchaseDate, category, shelfId);
   }
 
-  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setPhotoBlob(file);
+  async function handleAddPhotos(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = ''; // allow picking the same file again
+    if (files.length === 0) return;
+    const next = [...photos, ...files].slice(0, 4); // cap at 4 angles
+    setPhotos(next);
     setVisualAnalysis(null);
 
     // AI auto-detect needs sign-in — skip the guaranteed-401 call, hint instead.
@@ -206,13 +209,26 @@ export default function ItemForm() {
       setScanMsg('Sign in (Account) to auto-fill and analyze items from the photo.');
       return;
     }
+    await scanPhotos(next);
+  }
 
-    // AI scan: detect the item and pre-fill the form. Best-effort — failure is silent-ish.
+  function removePhoto(index: number) {
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  // AI scan over all angle photos at once — more angles = more accurate ID.
+  async function scanPhotos(blobs: Blob[]) {
+    if (blobs.length === 0) return;
     setScanning(true);
     setScanMsg(null);
     try {
-      const dataUrl = await blobToBase64(file);
-      const items = await detectItems(dataUrl, file.type || 'image/jpeg');
+      const imgs = await Promise.all(
+        blobs.map(async (b) => ({
+          imageBase64: await blobToBase64(b),
+          mimeType: b.type || 'image/jpeg',
+        })),
+      );
+      const items = await detectItems(imgs);
       const top = items[0];
       if (top) {
         if (!name.trim()) setName(top.name);
@@ -229,18 +245,21 @@ export default function ItemForm() {
           void refineEstimate(purchaseDate, cat, shelfId, undefined, photoNote);
         }
         const conf = typeof top.confidence === 'number' ? top.confidence : undefined;
+        const angles = blobs.length > 1 ? ` from ${blobs.length} angles` : '';
         if (conf !== undefined && conf < 0.6) {
           setScanMsg(
-            `Recognized "${top.name}" but not confident (${Math.round(conf * 100)}%). ` +
-              'Retake closer, in better light, or from a different angle for a more accurate scan.',
+            `Recognized "${top.name}" but not confident (${Math.round(conf * 100)}%)${angles}. ` +
+              'Add another angle, or retake closer in better light for a more accurate scan.',
           );
         } else {
           setScanMsg(
-            `Recognized: ${top.name}${conf !== undefined ? ` (${Math.round(conf * 100)}% confident)` : ''}`,
+            `Recognized: ${top.name}${conf !== undefined ? ` (${Math.round(conf * 100)}% confident)` : ''}${angles}`,
           );
         }
       } else {
-        setScanMsg('No item recognized — retake from a different angle with good lighting, or fill in manually.');
+        setScanMsg(
+          'No item recognized — add another angle with good lighting, or fill in manually.',
+        );
       }
     } catch (err) {
       setScanMsg(aiErrorMessage(err));
@@ -256,7 +275,7 @@ export default function ItemForm() {
       name: name.trim(),
       category,
       shelfId,
-      photoBlob,
+      photoBlob: photos[0],
       quantityPct,
       purchaseDate,
       expiryDate,
@@ -291,20 +310,55 @@ export default function ItemForm() {
 
       <main className="max-w-2xl mx-auto px-5 pt-2 pb-28 flex flex-col gap-5">
         <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border rounded-2xl p-4 cursor-pointer">
-          <PhotoThumb blob={photoBlob} alt={name || 'item photo'} className="w-32 h-32 rounded-xl" />
+          <PhotoThumb blob={primaryPhoto} alt={name || 'item photo'} className="w-32 h-32 rounded-xl" />
           <span className="text-sm text-primary font-medium flex items-center gap-1">
-            <Icon name="photo_camera" /> {photoBlob ? 'Retake photo' : 'Take photo'}
+            <Icon name="photo_camera" /> {primaryPhoto ? 'Retake photo' : 'Take photo'}
           </span>
-          <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoChange} />
+          <input type="file" accept="image/*" capture="environment" multiple className="hidden" onChange={handleAddPhotos} />
         </label>
+
+        {photos.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            {photos.map((b, i) => (
+              <div key={i} className="relative">
+                <PhotoThumb blob={b} alt={`angle ${i + 1}`} className="w-16 h-16 rounded-lg" />
+                <button
+                  type="button"
+                  onClick={() => removePhoto(i)}
+                  aria-label={`Remove angle ${i + 1}`}
+                  className="absolute -top-1.5 -right-1.5 bg-bg border border-border rounded-full w-5 h-5 flex items-center justify-center text-text-muted"
+                >
+                  <Icon name="close" className="text-[14px]" />
+                </button>
+              </div>
+            ))}
+            {photos.length < 4 && (
+              <label className="w-16 h-16 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer text-primary text-[11px] font-medium">
+                <Icon name="add_a_photo" />
+                Angle
+                <input type="file" accept="image/*" capture="environment" multiple className="hidden" onChange={handleAddPhotos} />
+              </label>
+            )}
+            {photos.length > 1 && !aiLocked && (
+              <button
+                type="button"
+                onClick={() => void scanPhotos(photos)}
+                disabled={scanning}
+                className="text-sm text-primary font-medium flex items-center gap-1 ml-1 disabled:opacity-50"
+              >
+                <Icon name="auto_awesome" /> Rescan {photos.length} angles
+              </button>
+            )}
+          </div>
+        )}
 
         <div className="bg-primary-soft/35 border border-primary-soft rounded-2xl p-4 flex items-start gap-3">
           <Icon name="center_focus_strong" className="text-primary shrink-0" />
           <p className="text-sm leading-relaxed text-text-muted">
             For better analysis, center one item in a clear, well-lit photo and keep labels facing
-            the camera. AI identifies the item, category, quantity, and visible freshness clues. If
-            it guesses wrong or low-confidence, retake from a different angle or closer. Manual entry
-            only uses category and storage estimates.
+            the camera. AI identifies the item, category, quantity, and visible freshness clues. Add
+            a few angles (front, label, top) for a more accurate scan; if it guesses wrong, retake
+            closer or remove a blurry angle. Manual entry only uses category and storage estimates.
           </p>
         </div>
 
@@ -437,7 +491,7 @@ export default function ItemForm() {
           estimateInfo={estimateInfo}
           visualAnalysis={visualAnalysis}
           conditionNotes={conditionNotes}
-          hasPhoto={Boolean(photoBlob)}
+          hasPhoto={photos.length > 0}
         />
 
         <button
