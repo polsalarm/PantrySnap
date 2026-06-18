@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { db, SHELF_SEED, withUid, type ExpirySource, type ShelfId } from '../lib/db';
-import { CATEGORIES, estimateExpiryDate } from '../lib/expiry';
+import { CATEGORIES, estimateExpiryDate, estimateShelfLifeDays } from '../lib/expiry';
 import { fetchShelfLife, detectItems, blobToBase64, aiErrorMessage, type Storage } from '../lib/api';
 import { useAuth } from '../lib/useAuth';
 import Icon from '../components/Icon';
@@ -17,6 +17,24 @@ function addDays(dateIso: string, days: number): string {
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
 }
+
+interface EstimateInfo {
+  days: number;
+  category: string;
+  storage: Storage;
+  source: 'foodkeeper' | 'local';
+  matched: boolean;
+}
+
+const initialEstimate = (category: string, shelfId: ShelfId): EstimateInfo => ({
+  days: estimateShelfLifeDays(category),
+  category,
+  storage: storageForShelf(shelfId),
+  source: 'local',
+  matched: false,
+});
+
+const CONDITION_HINTS = ['opened', 'cooked', 'sealed', 'smells off', 'mold visible'];
 
 // Map the backend's detected category to a frontend CATEGORIES value.
 function mapDetectedCategory(detected: string): string {
@@ -48,9 +66,14 @@ export default function ItemForm() {
   const [purchaseDate, setPurchaseDate] = useState(today());
   const [expiryDate, setExpiryDate] = useState(estimateExpiryDate(today(), CATEGORIES[0]));
   const [expirySource, setExpirySource] = useState<ExpirySource>('estimated');
+  const [conditionNotes, setConditionNotes] = useState('');
   const [photoBlob, setPhotoBlob] = useState<Blob | undefined>(undefined);
   const [scanning, setScanning] = useState(false);
   const [scanMsg, setScanMsg] = useState<string | null>(null);
+  const [visualAnalysis, setVisualAnalysis] = useState<string | null>(null);
+  const [estimateInfo, setEstimateInfo] = useState<EstimateInfo>(() =>
+    initialEstimate(CATEGORIES[0], 'middle'),
+  );
   const auth = useAuth();
   const aiLocked = auth.aiRequiresSignIn && !auth.signedIn;
 
@@ -66,7 +89,9 @@ export default function ItemForm() {
       setPurchaseDate(item.purchaseDate);
       setExpiryDate(item.expiryDate);
       setExpirySource(item.expirySource);
+      setConditionNotes(item.conditionNotes ?? '');
       setPhotoBlob(item.photoBlob);
+      setEstimateInfo(initialEstimate(item.category, item.shelfId));
     });
   }, [isEdit, itemId]);
 
@@ -74,13 +99,25 @@ export default function ItemForm() {
   // Instant local estimate stays as the offline fallback; backend overrides it when reachable.
   async function refineEstimate(purchase: string, cat: string, shelf: ShelfId) {
     const res = await fetchShelfLife(cat, storageForShelf(shelf));
-    if (res) setExpiryDate(addDays(purchase, res.days));
+    if (res) {
+      setExpiryDate(addDays(purchase, res.days));
+      setEstimateInfo({
+        days: res.days,
+        category: res.category,
+        storage: res.storage,
+        source: res.source === 'foodkeeper' ? 'foodkeeper' : 'local',
+        matched: res.matched,
+      });
+      return;
+    }
+    setEstimateInfo(initialEstimate(cat, shelf));
   }
 
   function handlePurchaseDateChange(value: string) {
     setPurchaseDate(value);
     if (expirySource === 'estimated') {
       setExpiryDate(estimateExpiryDate(value, category));
+      setEstimateInfo(initialEstimate(category, shelfId));
       void refineEstimate(value, category, shelfId);
     }
   }
@@ -89,13 +126,17 @@ export default function ItemForm() {
     setCategory(value);
     if (expirySource === 'estimated') {
       setExpiryDate(estimateExpiryDate(purchaseDate, value));
+      setEstimateInfo(initialEstimate(value, shelfId));
       void refineEstimate(purchaseDate, value, shelfId);
     }
   }
 
   function handleShelfChange(value: ShelfId) {
     setShelfId(value);
-    if (expirySource === 'estimated') void refineEstimate(purchaseDate, category, value);
+    if (expirySource === 'estimated') {
+      setEstimateInfo(initialEstimate(category, value));
+      void refineEstimate(purchaseDate, category, value);
+    }
   }
 
   function handleExpiryDateChange(value: string) {
@@ -103,14 +144,24 @@ export default function ItemForm() {
     setExpirySource('manual');
   }
 
+  function appendConditionNote(note: string) {
+    const parts = conditionNotes
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean);
+    if (parts.some((part) => part.toLowerCase() === note.toLowerCase())) return;
+    setConditionNotes([...parts, note].join(', '));
+  }
+
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setPhotoBlob(file);
+    setVisualAnalysis(null);
 
     // AI auto-detect needs sign-in — skip the guaranteed-401 call, hint instead.
     if (aiLocked) {
-      setScanMsg('Sign in (Account) to auto-fill items from the photo.');
+      setScanMsg('Sign in (Account) to auto-fill and analyze items from the photo.');
       return;
     }
 
@@ -128,8 +179,12 @@ export default function ItemForm() {
         if (typeof top.quantityPct === 'number') {
           setQuantityPct(Math.round(top.quantityPct));
         }
+        setVisualAnalysis(
+          [top.freshnessNote, top.expirationNote].filter(Boolean).join(' '),
+        );
         if (expirySource === 'estimated') {
           setExpiryDate(estimateExpiryDate(purchaseDate, cat));
+          setEstimateInfo(initialEstimate(cat, shelfId));
           void refineEstimate(purchaseDate, cat, shelfId);
         }
         setScanMsg(`Recognized: ${top.name}`);
@@ -155,6 +210,7 @@ export default function ItemForm() {
       purchaseDate,
       expiryDate,
       expirySource,
+      conditionNotes: conditionNotes.trim() || undefined,
       lowStockThresholdPct,
       updatedAt: now,
     };
@@ -190,6 +246,15 @@ export default function ItemForm() {
           </span>
           <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoChange} />
         </label>
+
+        <div className="bg-primary-soft/35 border border-primary-soft rounded-2xl p-4 flex items-start gap-3">
+          <Icon name="center_focus_strong" className="text-primary shrink-0" />
+          <p className="text-sm leading-relaxed text-text-muted">
+            For better analysis, scan or upload a clear food photo. AI can identify the item,
+            category, quantity, and visible freshness clues; manual entry only uses category and
+            storage estimates.
+          </p>
+        </div>
 
         {scanning && (
           <p className="text-sm text-primary text-center flex items-center justify-center gap-2">
@@ -270,6 +335,30 @@ export default function ItemForm() {
           />
         </Field>
 
+        <Field label="Condition notes">
+          <div className="flex flex-col gap-2">
+            <textarea
+              value={conditionNotes}
+              onChange={(e) => setConditionNotes(e.target.value)}
+              placeholder="e.g. opened yesterday, sealed, smells off, mold visible"
+              rows={3}
+              className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary resize-none"
+            />
+            <div className="flex flex-wrap gap-2">
+              {CONDITION_HINTS.map((note) => (
+                <button
+                  key={note}
+                  type="button"
+                  onClick={() => appendConditionNote(note)}
+                  className="rounded-full border border-border bg-surface px-3 py-1 text-xs font-semibold text-text-muted"
+                >
+                  {note}
+                </button>
+              ))}
+            </div>
+          </div>
+        </Field>
+
         <Field
           label={
             <span className="flex items-center gap-2">
@@ -290,6 +379,14 @@ export default function ItemForm() {
           />
         </Field>
 
+        <ExpiryAnalysis
+          expirySource={expirySource}
+          estimateInfo={estimateInfo}
+          visualAnalysis={visualAnalysis}
+          conditionNotes={conditionNotes}
+          hasPhoto={Boolean(photoBlob)}
+        />
+
         <button
           onClick={handleSave}
           className="w-full bg-primary text-white font-semibold rounded-xl py-3.5 mt-2"
@@ -303,6 +400,51 @@ export default function ItemForm() {
           </button>
         )}
       </main>
+    </div>
+  );
+}
+
+function ExpiryAnalysis({
+  expirySource,
+  estimateInfo,
+  visualAnalysis,
+  conditionNotes,
+  hasPhoto,
+}: {
+  expirySource: ExpirySource;
+  estimateInfo: EstimateInfo;
+  visualAnalysis: string | null;
+  conditionNotes: string;
+  hasPhoto: boolean;
+}) {
+  const sourceLabel =
+    estimateInfo.source === 'foodkeeper'
+      ? 'FoodKeeper shelf-life data'
+      : 'local category fallback';
+  return (
+    <div className="animate-in bg-surface border border-border rounded-2xl p-4 card-shadow">
+      <div className="flex items-center gap-2 text-text font-semibold">
+        <Icon name="psychology" className="text-primary" filled />
+        Expiry analysis
+      </div>
+      <p className="text-sm leading-relaxed text-text-muted mt-2">
+        {expirySource === 'manual'
+          ? 'You manually set this date, so PantrySnap will not override it.'
+          : `Estimated as purchase date + ${estimateInfo.days} days for ${estimateInfo.category} stored in ${estimateInfo.storage}. Source: ${sourceLabel}${
+              estimateInfo.matched ? '' : ' using the closest default match'
+            }.`}
+      </p>
+      <p className="text-sm leading-relaxed text-text-muted mt-2">
+        {visualAnalysis ||
+          (hasPhoto
+            ? 'Photo saved. Sign in and rescan if you want AI to describe visible freshness clues.'
+            : 'No photo analysis yet. A clear photo helps AI detect the food type and visible condition, which can make the estimate easier to review.')}
+      </p>
+      {conditionNotes.trim() && (
+        <p className="text-sm leading-relaxed text-accent-dark mt-2">
+          User notes to consider: {conditionNotes.trim()}
+        </p>
+      )}
     </div>
   );
 }
