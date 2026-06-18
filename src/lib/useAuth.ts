@@ -23,8 +23,8 @@ export function useAuth(): AuthState {
     if (!cloudEnabled) return;
     let unsub: (() => void) | undefined;
     (async () => {
-      const { supabase } = await import('./supabase');
-      const sb = supabase();
+      const { getSupabase } = await import('./supabase');
+      const sb = await getSupabase();
       const { data } = await sb.auth.getSession();
       setState({
         ready: true,
