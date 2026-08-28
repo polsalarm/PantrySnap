@@ -7,7 +7,7 @@ import { db, type Item } from '../lib/db';
 import { sendChat, aiErrorMessage, type ChatMessage } from '../lib/api';
 import { daysUntil } from '../lib/expiry';
 import { urgentItems } from '../lib/recipeview';
-import { plainChatText } from '../lib/plainChat';
+import FoodReply from '../components/FoodReply';
 import Mascot from '../components/Mascot';
 import { fadeUp, springBouncy, springSoft, staggerFast } from '../lib/motion';
 
@@ -197,9 +197,9 @@ export default function Chat() {
                   }}
                   animate={{ opacity: 1, x: 0, scale: 1 }}
                   transition={springSoft}
-                  className={`max-w-[85%] px-4 py-3 text-[13px] sm:text-sm font-semibold whitespace-pre-wrap leading-relaxed ${
+                  className={`max-w-[85%] px-4 py-3 text-[13px] sm:text-sm font-semibold leading-relaxed ${
                     m.role === 'user'
-                      ? 'self-end rounded-[22px] rounded-br-md bg-[#2D2424] text-white shadow-[0_8px_20px_rgba(45,36,36,0.18)]'
+                      ? 'self-end rounded-[22px] rounded-br-md bg-[#2D2424] text-white shadow-[0_8px_20px_rgba(45,36,36,0.18)] whitespace-pre-wrap'
                       : 'self-start rounded-[22px] rounded-bl-md bg-white/90 text-[#2D2424] border border-[#2D2424]/8 shadow-[0_6px_16px_rgba(45,36,36,0.06)]'
                   }`}
                 >
@@ -208,7 +208,7 @@ export default function Chat() {
                       Steve
                     </span>
                   )}
-                  {m.role === 'model' ? plainChatText(m.text) : m.text}
+                  {m.role === 'model' ? <FoodReply text={m.text} /> : m.text}
                 </motion.div>
               ))}
             </AnimatePresence>

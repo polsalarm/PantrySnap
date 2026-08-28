@@ -2,6 +2,8 @@
 // All calls degrade gracefully: on failure/offline the caller falls back to
 // local logic, keeping the app local-first.
 
+import { tidyFoodMarkdown } from './plainChat';
+
 const BASE = import.meta.env.VITE_API_BASE ?? '/api';
 
 export type Storage = 'fridge' | 'freezer' | 'pantry';
@@ -223,7 +225,7 @@ export async function sendChat(
   pantry: { name: string; expiryDate?: string; quantityPct?: number }[],
 ): Promise<string> {
   const res = await postJson<{ reply: string }>('/chat', { messages, pantry });
-  return res.reply;
+  return tidyFoodMarkdown(res.reply);
 }
 
 /** Convert an image Blob to a base64 data URL for /detect. */

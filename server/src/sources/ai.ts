@@ -136,18 +136,11 @@ export interface ChatMessage {
   text: string;
 }
 
-/** Strip Markdown/hashtags so chat bubbles stay readable as plain talk. */
-export function plainChatText(raw: string): string {
+/** Keep cooking Markdown; drop code fences and social hashtags like #dinner. */
+function tidyFoodMarkdown(raw: string): string {
   return raw
-    .replace(/```[\s\S]*?```/g, (block) => block.replace(/```(?:\w+)?\n?/g, '').replace(/```/g, ''))
-    .replace(/^#{1,6}\s+/gm, '')
-    .replace(/\*\*(.+?)\*\*/g, '$1')
-    .replace(/__(.+?)__/g, '$1')
-    .replace(/(^|[^\w])\*(.+?)\*/g, '$1$2')
-    .replace(/`([^`]+)`/g, '$1')
-    .replace(/^>\s+/gm, '')
-    .replace(/^\s*[-*]\s+/gm, '• ')
-    .replace(/(^|\s)#[\p{L}\p{N}_]+/gu, '$1')
+    .replace(/```(?:\w+)?\n?([\s\S]*?)```/g, '$1')
+    .replace(/(^|[^\n#])#([\p{L}\p{N}_]+)/gu, '$1')
     .replace(/[ \t]+\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
@@ -169,12 +162,16 @@ export async function chat(
       systemInstruction:
         'You are Steve, a friendly kitchen assistant. Help the user cook with and not ' +
         'waste their food. Be concise and practical.\n' +
-        'Write like a chat bubble, not a blog post. Never use Markdown: no # headings, ' +
-        'no **bold**, no code fences, no hashtags. Short paragraphs. If you list things, ' +
-        'use a dash or a number on each line.\n' +
+        'Format food answers the way a cooking assistant would:\n' +
+        '- Start with a short dish or answer title on its own line as `# Title`\n' +
+        '- Use `## Ingredients` then a dash list (`- item — amount`)\n' +
+        '- Use `## Steps` then a numbered list (`1. …`)\n' +
+        '- Optional `## Tip` as one short line\n' +
+        '- For non-recipe answers (what is expiring, storage), use a heading and bullets\n' +
+        'Use Markdown so the app can style it. Never use social hashtags like #dinner or #easy.\n' +
         `Their pantry right now: ${pantryText || '(empty)'}.`,
       tools: [{ googleSearch: {} }],
     },
   });
-  return plainChatText(res.text ?? '');
+  return tidyFoodMarkdown(res.text ?? '');
 }
