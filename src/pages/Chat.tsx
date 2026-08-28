@@ -7,6 +7,7 @@ import { db, type Item } from '../lib/db';
 import { sendChat, aiErrorMessage, type ChatMessage } from '../lib/api';
 import { daysUntil } from '../lib/expiry';
 import { urgentItems } from '../lib/recipeview';
+import { plainChatText } from '../lib/plainChat';
 import Mascot from '../components/Mascot';
 import { fadeUp, springBouncy, springSoft, staggerFast } from '../lib/motion';
 
@@ -207,7 +208,7 @@ export default function Chat() {
                       Steve
                     </span>
                   )}
-                  {m.text}
+                  {m.role === 'model' ? plainChatText(m.text) : m.text}
                 </motion.div>
               ))}
             </AnimatePresence>

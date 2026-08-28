@@ -136,6 +136,23 @@ export interface ChatMessage {
   text: string;
 }
 
+/** Strip Markdown/hashtags so chat bubbles stay readable as plain talk. */
+export function plainChatText(raw: string): string {
+  return raw
+    .replace(/```[\s\S]*?```/g, (block) => block.replace(/```(?:\w+)?\n?/g, '').replace(/```/g, ''))
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/__(.+?)__/g, '$1')
+    .replace(/(^|[^\w])\*(.+?)\*/g, '$1$2')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/^>\s+/gm, '')
+    .replace(/^\s*[-*]\s+/gm, '• ')
+    .replace(/(^|\s)#[\p{L}\p{N}_]+/gu, '$1')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 /** Conversational assistant over the user's pantry (gemini-2.5-flash + Search grounding). */
 export async function chat(
   messages: ChatMessage[],
@@ -152,9 +169,12 @@ export async function chat(
       systemInstruction:
         'You are Steve, a friendly kitchen assistant. Help the user cook with and not ' +
         'waste their food. Be concise and practical.\n' +
+        'Write like a chat bubble, not a blog post. Never use Markdown: no # headings, ' +
+        'no **bold**, no code fences, no hashtags. Short paragraphs. If you list things, ' +
+        'use a dash or a number on each line.\n' +
         `Their pantry right now: ${pantryText || '(empty)'}.`,
       tools: [{ googleSearch: {} }],
     },
   });
-  return res.text ?? '';
+  return plainChatText(res.text ?? '');
 }
