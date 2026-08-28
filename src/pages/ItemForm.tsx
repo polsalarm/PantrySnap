@@ -4,7 +4,6 @@ import { ArrowLeft, Camera, Plus, Sparkles, X } from 'lucide-react';
 import { db, SHELF_SEED, withUid, type ExpirySource, type ShelfId } from '../lib/db';
 import { CATEGORIES, estimateExpiryDate, estimateShelfLifeDays } from '../lib/expiry';
 import { analyzeExpiry, detectItems, blobToBase64, aiErrorMessage, type Storage } from '../lib/api';
-import { useAuth } from '../lib/useAuth';
 import PhotoThumb from '../components/PhotoThumb';
 import { DynamicFoodIcon } from '../components/FoodIcons';
 
@@ -94,8 +93,6 @@ export default function ItemForm() {
   const [estimateInfo, setEstimateInfo] = useState<EstimateInfo>(() =>
     initialEstimate(CATEGORIES[0], 'middle'),
   );
-  const auth = useAuth();
-  const aiLocked = auth.aiRequiresSignIn && !auth.signedIn;
 
   useEffect(() => {
     if (!isEdit) return;
@@ -214,12 +211,6 @@ export default function ItemForm() {
     const next = [...photos, ...files].slice(0, 4); // cap at 4 angles
     setPhotos(next);
     setVisualAnalysis(null);
-
-    // AI auto-detect needs sign-in — skip the guaranteed-401 call, hint instead.
-    if (aiLocked) {
-      setScanMsg('Sign in (Account) to auto-fill and analyze items from the photo.');
-      return;
-    }
     await scanPhotos(next);
   }
 
@@ -399,7 +390,7 @@ export default function ItemForm() {
                 />
               </label>
             )}
-            {photos.length > 1 && !aiLocked && (
+            {photos.length > 1 && (
               <button
                 type="button"
                 onClick={() => void scanPhotos(photos)}
@@ -680,7 +671,7 @@ function ExpiryAnalysis({
       <p className="text-[13px] font-semibold leading-relaxed text-ink-soft mt-2">
         {visualAnalysis ||
           (hasPhoto
-            ? 'Photo saved. Sign in and rescan if you want AI to describe visible freshness clues.'
+            ? 'Photo saved. Tap Rescan if you want AI to describe visible freshness clues.'
             : 'No photo analysis yet. A clear photo helps AI detect the food type and visible condition, which can make the estimate easier to review.')}
       </p>
       {conditionNotes.trim() && (

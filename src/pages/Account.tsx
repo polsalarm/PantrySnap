@@ -99,7 +99,7 @@ export default function Account() {
           <div className="bg-white/90 backdrop-blur-md rounded-3xl p-5 border-2 border-white shadow-[0_6px_0_rgba(186,230,253,0.7)] flex flex-col gap-3.5">
             <div>
               <p className="text-base font-black text-slate-800">Connect to FLDSMDFR Cloud</p>
-              <p className="text-xs font-bold text-slate-500 mt-0.5">Sign in to sync your fridge and pantry across all devices.</p>
+              <p className="text-xs font-bold text-slate-500 mt-0.5">Optional — the app works without this. Sign in only if you want fridge sync across devices.</p>
             </div>
             <input
               type="email"

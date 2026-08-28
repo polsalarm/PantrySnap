@@ -1,25 +1,21 @@
-// Supabase token verification for protecting AI endpoints (cost + abuse control).
-// Verifies the user's access token against Supabase's /auth/v1/user endpoint and
-// caches the result briefly. Enforced only when Supabase is configured on the server.
+// Optional Supabase identity. Used only to bucket rate limits when a token
+// is present — guests still get AI. Never returns 401 for a missing session.
 import { cached } from './cache.js';
 
 const url = process.env.SUPABASE_URL?.trim();
 const anonKey = process.env.SUPABASE_ANON_KEY?.trim();
 
-// When Supabase is configured, AI endpoints require a valid user token.
-export const authRequired = Boolean(url && anonKey);
+export const authRequired = false;
 
 export interface AuthUser {
   id: string;
   email?: string;
 }
 
-export async function verifyToken(token: string | undefined): Promise<AuthUser | null> {
-  if (!authRequired) return { id: 'anonymous' }; // dev: no Supabase => no gate
-  if (!token) return null;
+export async function verifyToken(token: string | undefined): Promise<AuthUser> {
+  if (!token || !url || !anonKey) return { id: 'anonymous' };
 
-  // Cache by token for 60s to avoid hitting Supabase on every AI call.
-  return cached(`auth:${token.slice(-24)}`, 60_000, async () => {
+  const user = await cached(`auth:${token.slice(-24)}`, 60_000, async () => {
     try {
       const res = await fetch(`${url}/auth/v1/user`, {
         headers: { apikey: anonKey!, Authorization: `Bearer ${token}` },
@@ -32,6 +28,7 @@ export async function verifyToken(token: string | undefined): Promise<AuthUser |
       return null;
     }
   });
+  return user ?? { id: 'anonymous' };
 }
 
 /** Extract a Bearer token from the Authorization header. */

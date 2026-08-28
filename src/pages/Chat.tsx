@@ -7,9 +7,7 @@ import { db, type Item } from '../lib/db';
 import { sendChat, aiErrorMessage, type ChatMessage } from '../lib/api';
 import { daysUntil } from '../lib/expiry';
 import { urgentItems } from '../lib/recipeview';
-import AiLock from '../components/AiLock';
 import Mascot from '../components/Mascot';
-import { useAuth } from '../lib/useAuth';
 import { fadeUp, springBouncy, springSoft, staggerFast } from '../lib/motion';
 
 const SUGGESTIONS = [
@@ -80,8 +78,6 @@ export default function Chat() {
   const [tipsOpen, setTipsOpen] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const auth = useAuth();
-  const aiLocked = auth.aiRequiresSignIn && !auth.signedIn;
 
   const expiring = useMemo(() => urgentItems(items), [items]);
   const expiringCount = expiring.length;
@@ -240,12 +236,6 @@ export default function Chat() {
           transform-based containing-block trick, which is fragile across browsers. */}
       <div className="relative z-10 mt-auto shrink-0 px-4 pt-2 pb-8">
         <div className="max-w-md mx-auto">
-          {aiLocked ? (
-            <div className="rounded-full bg-white/90 backdrop-blur-md p-2 shadow-[0_8px_24px_rgba(45,36,36,0.08)]">
-              <AiLock label="Sign in to chat with Steve" />
-            </div>
-          ) : (
-            <>
               <AnimatePresence>
                 {tipsOpen && (
                   <motion.div
@@ -315,8 +305,6 @@ export default function Chat() {
                   </motion.button>
                 </div>
               </form>
-            </>
-          )}
         </div>
       </div>
     </div>

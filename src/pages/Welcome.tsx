@@ -3,36 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { cloudEnabled } from '../lib/supabase';
-import { useAuth } from '../lib/useAuth';
 import { PancakeIcon } from '../components/FoodIcons';
 import Mascot, { MascotMark } from '../components/Mascot';
 import { springSoft } from '../lib/motion';
 
 gsap.registerPlugin(useGSAP);
 
-type Mode = 'menu' | 'login' | 'signup';
-
-async function sb() {
-  const { getSupabase } = await import('../lib/supabase');
-  return getSupabase();
-}
-
 export default function Welcome() {
-  const auth = useAuth();
   const navigate = useNavigate();
   const [freeDismissed, setFreeDismissed] = useState(false);
-  const [mode, setMode] = useState<Mode>('menu');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const propsRef = useRef<HTMLDivElement>(null);
 
-  const visible = auth.ready && !auth.signedIn && !freeDismissed;
+  const visible = !freeDismissed;
 
   useGSAP(
     () => {
@@ -61,54 +46,9 @@ export default function Welcome() {
     { scope: rootRef, dependencies: [visible] },
   );
 
-  if (!auth.ready) return null;
-
   function enterApp() {
     setFreeDismissed(true);
     navigate('/', { replace: true });
-  }
-
-  async function login() {
-    setBusy(true);
-    setMsg(null);
-    try {
-      const { error } = await (await sb()).auth.signInWithPassword({ email: email.trim(), password });
-      if (error) setMsg(error.message);
-      else enterApp();
-    } catch {
-      setMsg('Login unavailable right now.');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function signup() {
-    setBusy(true);
-    setMsg(null);
-    try {
-      const { data, error } = await (await sb()).auth.signUp({ email: email.trim(), password });
-      if (error) setMsg(error.message);
-      else if (!data.session) setMsg('Account created — check your email to confirm, then log in.');
-      else enterApp();
-    } catch {
-      setMsg('Sign up unavailable right now.');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function google() {
-    setBusy(true);
-    setMsg(null);
-    try {
-      await (await sb()).auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: window.location.origin },
-      });
-    } catch {
-      setMsg('Sign-in unavailable.');
-      setBusy(false);
-    }
   }
 
   return (
@@ -145,80 +85,12 @@ export default function Welcome() {
 
             <div className="space-y-5">
               <div ref={propsRef} className="flex flex-col gap-3 text-left">
-                <Prop icon={<PancakeIcon size={24} />} tint="bg-amber-100 border-amber-300" title="Free Food Radar (No Account)">
-                  Track fridge shelves, expiry countdowns, and recipe matches offline directly on your device.
+                <Prop icon={<PancakeIcon size={24} />} tint="bg-amber-100 border-amber-300" title="Food radar, no account">
+                  Track fridge shelves, expiry countdowns, and recipe matches on this device.
                 </Prop>
                 <Prop icon={<MascotMark size={24} />} tint="bg-slate-100 border-slate-300" title="Steve watches your shelves">
-                  Snap food photos to auto-detect items, synthesize custom recipes, and chat with your kitchen buddy.
+                  Snap photos, generate recipes, and chat — all open without signing in.
                 </Prop>
-              </div>
-
-              <div className="bg-white/90 backdrop-blur-md rounded-3xl p-5 border-3 border-white shadow-[0_8px_0_rgba(186,230,253,0.9),0_16px_28px_rgba(15,23,42,0.08)]">
-                {!cloudEnabled ? (
-                  <p className="text-sm font-bold text-slate-500 text-center">
-                    Cloud sync is offline on this build — continue free below.
-                  </p>
-                ) : mode === 'menu' ? (
-                  <div className="flex flex-col gap-3">
-                    <button
-                      onClick={google}
-                      disabled={busy}
-                      className="flex min-h-12 items-center justify-center gap-3 bg-white border-2 border-sky-200 text-slate-800 text-sm font-extrabold rounded-2xl py-3 disabled:opacity-60 shadow-[0_3px_0_#bae6fd] hover:border-sky-300 active:translate-y-0.5 active:shadow-none transition-all"
-                    >
-                      <span className="grid size-6 place-items-center rounded-full bg-amber-100 text-xs font-black text-amber-700">
-                        G
-                      </span>
-                      Continue with Google
-                    </button>
-                    <button
-                      onClick={() => setMode('signup')}
-                      className="btn-meatball min-h-12 rounded-2xl py-3 text-sm font-black shadow-md flex items-center justify-center gap-2"
-                    >
-                      <span>Sign up with email</span>
-                    </button>
-                    <button onClick={() => setMode('login')} className="text-red-600 font-extrabold py-1.5 text-sm hover:underline">
-                      Already have an account? Log in
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-3">
-                    <div className="flex bg-sky-100 rounded-2xl p-1 text-sm font-extrabold border border-sky-200 relative">
-                      <Tab active={mode === 'login'} onClick={() => setMode('login')}>
-                        Log in
-                      </Tab>
-                      <Tab active={mode === 'signup'} onClick={() => setMode('signup')}>
-                        Sign up
-                      </Tab>
-                    </div>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@email.com"
-                      aria-label="Email"
-                      className="min-h-11 bg-white border-2 border-sky-200 rounded-2xl px-4 py-2.5 text-sm font-bold outline-none focus:border-red-500 transition-colors"
-                    />
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Password"
-                      aria-label="Password"
-                      className="min-h-11 bg-white border-2 border-sky-200 rounded-2xl px-4 py-2.5 text-sm font-bold outline-none focus:border-red-500 transition-colors"
-                    />
-                    <button
-                      onClick={mode === 'login' ? login : signup}
-                      disabled={busy || !email.trim() || !password}
-                      className="btn-meatball min-h-12 rounded-2xl py-3 text-sm font-black disabled:opacity-60"
-                    >
-                      {busy ? 'Connecting…' : mode === 'login' ? 'Log in' : 'Create account'}
-                    </button>
-                    <button onClick={google} disabled={busy} className="text-xs font-bold text-slate-500 py-1 hover:text-slate-800">
-                      or continue with Google
-                    </button>
-                  </div>
-                )}
-                {msg && <p className="text-xs font-bold text-center text-red-600 mt-2 bg-red-50 p-2 rounded-xl border border-red-200">{msg}</p>}
               </div>
             </div>
 
@@ -227,14 +99,11 @@ export default function Welcome() {
                 whileTap={{ scale: 0.97 }}
                 transition={springSoft}
                 onClick={enterApp}
-                className="btn-cheese px-6 py-3 rounded-2xl text-sm font-black shadow-md inline-flex items-center gap-2"
+                className="btn-cheese px-6 py-3 rounded-2xl text-sm font-black shadow-md inline-flex items-center justify-center gap-2"
               >
                 <MascotMark size={20} />
-                <span>Start Free — No Account Needed</span>
+                <span>Start cooking</span>
               </motion.button>
-              <p className="text-xs font-bold text-sky-900 mt-2">
-                You can sync anytime from the Account tab.
-              </p>
             </div>
           </div>
         </motion.div>
@@ -264,33 +133,5 @@ function Prop({
       </div>
       <p className="text-xs font-bold text-slate-600 mt-1.5 leading-relaxed pl-12.5">{children}</p>
     </div>
-  );
-}
-
-function Tab({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`relative flex-1 rounded-full py-3 transition-colors z-10 ${
-        active ? 'text-text' : 'text-text-muted'
-      }`}
-    >
-      {active && (
-        <motion.span
-          layoutId="welcomeAuthTab"
-          className="absolute inset-0 rounded-full bg-surface shadow-sm -z-10"
-          transition={springSoft}
-        />
-      )}
-      {children}
-    </button>
   );
 }

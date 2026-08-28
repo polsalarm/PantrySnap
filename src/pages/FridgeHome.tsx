@@ -6,9 +6,7 @@ import { generateRecipe, aiErrorMessage, type GeneratedRecipe } from '../lib/api
 import type { Item } from '../lib/db';
 import { useRecipeViews, useSaved } from '../lib/useRecipeViews';
 import { urgentItems, type RecipeView } from '../lib/recipeview';
-import { useAuth } from '../lib/useAuth';
 import RecipeCard, { HeroRecipeCard } from '../components/RecipeCard';
-import AiLock from '../components/AiLock';
 import Mascot from '../components/Mascot';
 import {
   fadeScale,
@@ -31,8 +29,6 @@ function tonightCopy(stockCount: number, readyCount: number, expiringCount: numb
 }
 
 function GenerateFromItems({ items }: { items: Item[] }) {
-  const auth = useAuth();
-  const locked = auth.aiRequiresSignIn && !auth.signedIn;
   const [recipe, setRecipe] = useState<GeneratedRecipe | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,20 +56,16 @@ function GenerateFromItems({ items }: { items: Item[] }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ ...springSoft, delay: 0.05 }}
         >
-          {locked ? (
-            <AiLock label="Sign in to generate AI recipes" />
-          ) : (
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={generate}
-              disabled={busy}
-              className="card-plate w-full py-3.5 px-4 flex items-center justify-center gap-2 text-sm font-bold text-ink disabled:opacity-70"
-              style={{ background: 'var(--color-tint-breakfast)' }}
-            >
-              <Sparkles size={16} strokeWidth={1.75} />
-              {busy ? 'Generating a recipe from your items…' : 'Generate a recipe from my items'}
-            </motion.button>
-          )}
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={generate}
+            disabled={busy}
+            className="card-plate w-full py-3.5 px-4 flex items-center justify-center gap-2 text-sm font-bold text-ink disabled:opacity-70"
+            style={{ background: 'var(--color-tint-breakfast)' }}
+          >
+            <Sparkles size={16} strokeWidth={1.75} />
+            {busy ? 'Generating a recipe from your items…' : 'Generate a recipe from my items'}
+          </motion.button>
         </motion.div>
       )}
 

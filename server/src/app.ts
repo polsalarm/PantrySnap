@@ -71,15 +71,12 @@ app.post('/api/expiry/analyze', async (c) => {
   }
 });
 
-// ---- Phase 6: AI (Gemini). Gated: AI configured + authed user + rate limit. ----
-
-// Middleware for the paid AI routes:
-//  503 if no Gemini, 401 if not signed in (when Supabase configured), 429 if over rate.
+// ---- Phase 6: AI (Gemini). Open to guests; Gemini must be configured. ----
 const aiGate = async (c: import('hono').Context, next: import('hono').Next) => {
   if (!aiEnabled) return c.json({ error: 'AI disabled: configure Gemini/Vertex on the server' }, 503);
   const user = await verifyToken(bearer(c.req.header('Authorization')));
-  if (!user) return c.json({ error: 'Sign in to use AI features' }, 401);
-  const rate = checkRate(user.id);
+  const ip = c.req.header('x-forwarded-for')?.split(',')[0]?.trim();
+  const rate = checkRate(user.id === 'anonymous' ? `anon:${ip || 'local'}` : user.id);
   if (!rate.ok) {
     c.header('Retry-After', String(rate.retryAfterSec));
     return c.json({ error: `Rate limit reached — try again in ${rate.retryAfterSec}s` }, 429);

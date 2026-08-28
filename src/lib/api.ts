@@ -157,7 +157,7 @@ export class ApiError extends Error {
 /** Friendly message for AI call failures (auth / rate limit / unavailable). */
 export function aiErrorMessage(e: unknown): string {
   if (e instanceof ApiError) {
-    if (e.status === 401) return 'Sign in (Account tab) to use AI features.';
+    if (e.status === 401) return 'AI request was rejected. Try again.';
     if (e.status === 429) return e.message || 'Too many AI requests — slow down a moment.';
     if (e.status === 503) return 'AI is not available right now.';
     return e.message;
