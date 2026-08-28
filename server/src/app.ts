@@ -7,8 +7,15 @@ import { cors } from 'hono/cors';
 import { getShelfLife, type Storage } from './sources/shelflife.js';
 import { lookupProduct } from './sources/openfoodfacts.js';
 import { findRecipes } from './sources/recipes.js';
-import { aiEnabled, aiMode } from './lib/gemini.js';
-import { detectItems, generateRecipe, chat, type ChatMessage } from './sources/ai.js';
+import { aiEnabled as geminiEnabled, aiMode } from './lib/gemini.js';
+import {
+  detectItems,
+  generateRecipe,
+  chat,
+  chatEnabled,
+  chatProvider,
+  type ChatMessage,
+} from './sources/ai.js';
 import { analyzeExpiry, type ExpiryRequest } from './sources/expiry.js';
 import { verifyToken, bearer, authRequired } from './lib/auth.js';
 import { checkRate } from './lib/ratelimit.js';
@@ -23,8 +30,18 @@ app.use(
   cors({ origin: origins.length === 1 && origins[0] === '*' ? '*' : origins }),
 );
 
+// aiEnabled = anything AI works at all; chatProvider says who answers /api/chat.
 app.get('/api/health', (c) =>
-  c.json({ ok: true, service: 'pantrysnap', phase: 6, aiEnabled, aiMode, authRequired }),
+  c.json({
+    ok: true,
+    service: 'pantrysnap',
+    phase: 6,
+    aiEnabled: geminiEnabled || chatEnabled,
+    aiMode,
+    chatProvider,
+    visionEnabled: geminiEnabled,
+    authRequired,
+  }),
 );
 
 // GET /api/product?name=milk
@@ -73,24 +90,29 @@ app.post('/api/expiry/analyze', async (c) => {
 
 // ---- Phase 6: AI (Gemini). Gated: AI configured + authed user + rate limit. ----
 
-// Middleware for the paid AI routes:
-//  503 if no Gemini, 401 if not signed in (when Supabase configured), 429 if over rate.
-const aiGate = async (c: import('hono').Context, next: import('hono').Next) => {
-  if (!aiEnabled) return c.json({ error: 'AI disabled: configure Gemini/Vertex on the server' }, 503);
-  const user = await verifyToken(bearer(c.req.header('Authorization')));
-  if (!user) return c.json({ error: 'Sign in to use AI features' }, 401);
-  const rate = checkRate(user.id);
-  if (!rate.ok) {
-    c.header('Retry-After', String(rate.retryAfterSec));
-    return c.json({ error: `Rate limit reached — try again in ${rate.retryAfterSec}s` }, 429);
-  }
-  c.header('X-RateLimit-Remaining', String(rate.remaining));
-  await next();
-};
+// Middleware for the paid AI routes. Each route names the capability it needs,
+// so chat can run on DeepSeek alone while detect/recipe still require Gemini.
+//  503 if unconfigured, 401 if not signed in (when Supabase configured), 429 if over rate.
+const aiGate =
+  (enabled: boolean, missing: string) =>
+  async (c: import('hono').Context, next: import('hono').Next) => {
+    if (!enabled) return c.json({ error: `AI disabled: ${missing}` }, 503);
+    const user = await verifyToken(bearer(c.req.header('Authorization')));
+    if (!user) return c.json({ error: 'Sign in to use AI features' }, 401);
+    const rate = checkRate(user.id);
+    if (!rate.ok) {
+      c.header('Retry-After', String(rate.retryAfterSec));
+      return c.json({ error: `Rate limit reached — try again in ${rate.retryAfterSec}s` }, 429);
+    }
+    c.header('X-RateLimit-Remaining', String(rate.remaining));
+    await next();
+  };
 
-app.use('/api/detect', aiGate);
-app.use('/api/recipe/generate', aiGate);
-app.use('/api/chat', aiGate);
+const needsGemini = aiGate(geminiEnabled, 'configure Gemini/Vertex on the server');
+
+app.use('/api/detect', needsGemini);
+app.use('/api/recipe/generate', needsGemini);
+app.use('/api/chat', aiGate(chatEnabled, 'set DEEPSEEK_API_KEY (or Gemini) on the server'));
 
 // POST /api/detect
 //   { images: [{ imageBase64, mimeType }] }  (multi-angle, more accurate), or

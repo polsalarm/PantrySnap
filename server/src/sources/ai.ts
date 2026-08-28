@@ -1,6 +1,7 @@
 // Phase 6 AI features, grounded by the Phase 5 data layer.
 import { Type } from '@google/genai';
-import { gemini, MODELS } from '../lib/gemini.js';
+import { gemini, MODELS, aiEnabled as geminiEnabled } from '../lib/gemini.js';
+import { deepseekChat, deepseekEnabled } from '../lib/deepseek.js';
 import { findRecipes } from './recipes.js';
 
 const CATEGORIES =
@@ -136,23 +137,61 @@ export interface ChatMessage {
   text: string;
 }
 
-/** Conversational assistant over the user's pantry (gemini-2.5-flash + Search grounding). */
+/** True when at least one provider can serve /api/chat. */
+export const chatEnabled = deepseekEnabled || geminiEnabled;
+
+/** Which provider chat will actually use. Surfaced on /api/health. */
+export const chatProvider: 'deepseek' | 'gemini' | 'off' = deepseekEnabled
+  ? 'deepseek'
+  : geminiEnabled
+    ? 'gemini'
+    : 'off';
+
+function systemPrompt(
+  pantry: { name: string; expiryDate?: string; quantityPct?: number }[],
+): string {
+  const pantryText = pantry
+    .map(
+      (p) =>
+        `${p.name}` +
+        (p.expiryDate ? ` (expires ${p.expiryDate})` : '') +
+        (typeof p.quantityPct === 'number' ? ` [${Math.round(p.quantityPct)}% left]` : ''),
+    )
+    .join(', ');
+
+  return (
+    'You are PantrySnap, a friendly kitchen assistant. Help the user cook with and not ' +
+    'waste their food. Be concise and practical. Prefer ingredients they already have, ' +
+    'and prioritize whatever is closest to expiring. Never claim food is safe to eat — ' +
+    'expiry dates are estimates, so tell them to check it themselves.\n' +
+    `Their pantry right now: ${pantryText || '(empty)'}.`
+  );
+}
+
+/**
+ * Conversational assistant over the user's pantry.
+ * DeepSeek (deepseek-v4-flash) when DEEPSEEK_API_KEY is set, else Gemini.
+ */
 export async function chat(
   messages: ChatMessage[],
   pantry: { name: string; expiryDate?: string; quantityPct?: number }[],
 ): Promise<string> {
-  const pantryText = pantry
-    .map((p) => `${p.name}${p.expiryDate ? ` (expires ${p.expiryDate})` : ''}`)
-    .join(', ');
+  if (deepseekEnabled) {
+    return deepseekChat([
+      { role: 'system', content: systemPrompt(pantry) },
+      // App speaks Gemini's 'model'; OpenAI-compatible APIs call it 'assistant'.
+      ...messages.map((m) => ({
+        role: m.role === 'model' ? ('assistant' as const) : ('user' as const),
+        content: m.text,
+      })),
+    ]);
+  }
 
   const res = await gemini().models.generateContent({
     model: MODELS.flash,
     contents: messages.map((m) => ({ role: m.role, parts: [{ text: m.text }] })),
     config: {
-      systemInstruction:
-        'You are PantrySnap, a friendly kitchen assistant. Help the user cook with and not ' +
-        'waste their food. Be concise and practical.\n' +
-        `Their pantry right now: ${pantryText || '(empty)'}.`,
+      systemInstruction: systemPrompt(pantry),
       tools: [{ googleSearch: {} }],
     },
   });
