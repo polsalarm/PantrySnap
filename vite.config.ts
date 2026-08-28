@@ -38,6 +38,11 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,png,svg,ico,woff2}'],
+        // steve.png is a 3.58MB decorative mascot image — well over the 2MB
+        // default precache limit. It doesn't need offline availability, so it's
+        // excluded from precaching rather than bloating every install's cache
+        // (or raising the global limit) just to fit one oversized asset.
+        globIgnores: ['**/steve.png'],
         navigateFallback: '/index.html',
         runtimeCaching: [
           {
