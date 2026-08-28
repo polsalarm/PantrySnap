@@ -2,7 +2,7 @@
 // is set; otherwise the dispatcher falls back to TheMealDB. Free tier ~150 points/day.
 // Docs: https://spoonacular.com/food-api/docs
 import { cached, TTL } from '../lib/cache.js';
-import type { RankedRecipe } from './recipes.js';
+import { deriveLevel, normaliseCategory, type RankedRecipe } from './recipes.js';
 
 const BASE = 'https://api.spoonacular.com';
 const key = () => process.env.SPOONACULAR_API_KEY?.trim();
@@ -22,6 +22,9 @@ interface FindResult {
 interface InfoResult {
   extendedIngredients?: { name: string }[];
   analyzedInstructions?: { steps: { step: string }[] }[];
+  readyInMinutes?: number;
+  servings?: number;
+  dishTypes?: string[];
 }
 
 async function getInfo(id: number): Promise<InfoResult | null> {
@@ -79,6 +82,10 @@ export async function spoonacularRecipes(
         usesExpiring,
         ingredients: ingredientNames,
         steps,
+        mins: info?.readyInMinutes,
+        serves: info?.servings,
+        category: normaliseCategory(info?.dishTypes?.[0]),
+        level: deriveLevel(ingredientNames.length, steps.length),
         source: 'spoonacular',
       };
     }),

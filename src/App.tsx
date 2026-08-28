@@ -2,6 +2,8 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import BottomNav from './components/BottomNav';
 import FridgeHome from './pages/FridgeHome';
+import FridgeView from './pages/FridgeView';
+import Profile from './pages/Profile';
 import ShelfDetail from './pages/ShelfDetail';
 import Items from './pages/Items';
 import ItemForm from './pages/ItemForm';
@@ -20,6 +22,8 @@ export default function App() {
         <Welcome />
         <Routes>
           <Route path="/" element={<FridgeHome />} />
+          <Route path="/fridge" element={<FridgeView />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/shelf/:shelfId" element={<ShelfDetail />} />
           <Route path="/items" element={<Items />} />
           <Route path="/items/new" element={<ItemForm />} />

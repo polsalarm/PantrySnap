@@ -23,6 +23,11 @@ export interface ApiRecipe {
   usesExpiring: string[];
   ingredients: string[];
   steps: string[];
+  /** Spoonacular only; TheMealDB does not publish cook time or yield. */
+  mins?: number;
+  serves?: number;
+  category?: string;
+  level?: 'Easy' | 'Medium' | 'Hard';
   source: string;
 }
 

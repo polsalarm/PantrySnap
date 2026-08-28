@@ -1,15 +1,29 @@
 import { Link } from 'react-router-dom';
 import Icon from './Icon';
 
-export default function TopBar({ title, account = true }: { title: string; account?: boolean }) {
+export default function TopBar({
+  title,
+  account = true,
+}: {
+  title: string;
+  account?: boolean;
+  /** Retained for call-site compatibility; the weather ticker was removed. */
+  showWeather?: boolean;
+}) {
   return (
-    <header className="bg-bg flex items-center justify-between w-full px-5 py-3 max-w-2xl mx-auto sticky top-0 z-40">
-      <h1 className="text-2xl font-bold text-primary tracking-tight">{title}</h1>
-      {account && (
-        <Link to="/account" aria-label="Account and sync" className="text-text-muted">
-          <Icon name="account_circle" />
-        </Link>
-      )}
-    </header>
+    <div className="sticky top-0 z-40 bg-bg/90 backdrop-blur-md">
+      <header className="flex items-center justify-between w-full px-5 pt-4 pb-3 max-w-2xl mx-auto">
+        <h1 className="text-base font-bold text-text tracking-tight leading-none">{title}</h1>
+        {account && (
+          <Link
+            to="/account"
+            aria-label="Account and sync"
+            className="grid size-9 place-items-center rounded-full bg-surface text-text-muted hover:text-text shadow-[0_2px_8px_rgba(30,41,59,0.06)] transition-colors"
+          >
+            <Icon name="cloud_sync" className="text-lg" />
+          </Link>
+        )}
+      </header>
+    </div>
   );
 }

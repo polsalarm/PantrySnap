@@ -13,7 +13,35 @@ export interface RankedRecipe {
   usesExpiring: string[];
   ingredients: string[];
   steps: string[];
+  /** Cook time in minutes. Spoonacular only — TheMealDB does not publish it. */
+  mins?: number;
+  /** Servings yielded. Spoonacular only. */
+  serves?: number;
+  /** Meal category (Breakfast/Lunch/Dinner/Snack-ish). Both sources supply one. */
+  category?: string;
+  /** Derived, not sourced: no recipe API publishes a difficulty rating. */
+  level?: 'Easy' | 'Medium' | 'Hard';
   source: 'themealdb' | 'spoonacular';
+}
+
+/**
+ * Difficulty is inferred from recipe shape because neither upstream API exposes it.
+ * Kept here so both sources rate consistently.
+ */
+export function deriveLevel(ingredientCount: number, stepCount: number): 'Easy' | 'Medium' | 'Hard' {
+  const weight = ingredientCount + stepCount * 1.5;
+  if (weight <= 12) return 'Easy';
+  if (weight <= 22) return 'Medium';
+  return 'Hard';
+}
+
+/** Normalise upstream category vocabularies onto the four the UI tints by. */
+export function normaliseCategory(raw?: string): string {
+  const c = (raw ?? '').toLowerCase();
+  if (/breakfast|brunch/.test(c)) return 'Breakfast';
+  if (/side|salad|starter|lunch|sandwich|soup|appetizer/.test(c)) return 'Lunch';
+  if (/dessert|snack|sweet/.test(c)) return 'Snack';
+  return 'Dinner';
 }
 
 const BASE = 'https://www.themealdb.com/api/json/v1/1';
@@ -83,6 +111,10 @@ export async function mealDbRecipes(
 
   const ranked: RankedRecipe[] = meals.map((meal) => {
     const ingredients = extractIngredients(meal);
+    const steps = (meal.strInstructions ?? '')
+      .split(/\r?\n/)
+      .map((s) => s.trim())
+      .filter(Boolean);
     const matched = ingredients.filter((ing) =>
       [...haveSet].some((h) => ing.includes(h) || h.includes(ing)),
     );
@@ -97,10 +129,9 @@ export async function mealDbRecipes(
       totalCount: ingredients.length,
       usesExpiring,
       ingredients,
-      steps: (meal.strInstructions ?? '')
-        .split(/\r?\n/)
-        .map((s) => s.trim())
-        .filter(Boolean),
+      steps,
+      category: normaliseCategory(meal.strCategory),
+      level: deriveLevel(ingredients.length, steps.length),
       source: 'themealdb' as const,
     };
   });

@@ -1,9 +1,16 @@
+export type RecipeLevel = 'Easy' | 'Medium' | 'Hard';
+
 export interface Recipe {
   id: string;
   name: string;
   emoji: string;
   ingredients: string[]; // lowercase keywords matched against item names
   steps: string[];
+  /** Cook time in minutes. Hand-authored for these seeds. */
+  mins: number;
+  serves: number;
+  category: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack';
+  level: RecipeLevel;
 }
 
 export const RECIPE_SEED: Recipe[] = [
@@ -17,6 +24,10 @@ export const RECIPE_SEED: Recipe[] = [
       'Sauté diced onion and bell pepper until soft.',
       'Pour eggs over veggies, sprinkle cheese, fold and serve.',
     ],
+    mins: 10,
+    serves: 2,
+    category: 'Breakfast',
+    level: 'Easy',
   },
   {
     id: 'stir-fry',
@@ -28,6 +39,10 @@ export const RECIPE_SEED: Recipe[] = [
       'Add chopped vegetables, stir-fry on high heat 4-5 min.',
       'Splash soy sauce, toss, serve over rice.',
     ],
+    mins: 15,
+    serves: 3,
+    category: 'Dinner',
+    level: 'Easy',
   },
   {
     id: 'sandwich',
@@ -39,6 +54,10 @@ export const RECIPE_SEED: Recipe[] = [
       'Layer deli meat, cheese, and greens.',
       'Close, slice, serve.',
     ],
+    mins: 5,
+    serves: 1,
+    category: 'Lunch',
+    level: 'Easy',
   },
   {
     id: 'soup',
@@ -50,6 +69,10 @@ export const RECIPE_SEED: Recipe[] = [
       'Add leftovers and broth, simmer 15 min.',
       'Stir in greens at the end, season, serve.',
     ],
+    mins: 30,
+    serves: 4,
+    category: 'Dinner',
+    level: 'Medium',
   },
   {
     id: 'yogurt-bowl',
@@ -60,6 +83,10 @@ export const RECIPE_SEED: Recipe[] = [
       'Spoon yogurt into a bowl.',
       'Top with chopped fruit and a drizzle of honey.',
     ],
+    mins: 5,
+    serves: 1,
+    category: 'Snack',
+    level: 'Easy',
   },
   {
     id: 'grilled-cheese',
@@ -70,6 +97,10 @@ export const RECIPE_SEED: Recipe[] = [
       'Butter bread slices, layer cheese between them.',
       'Grill in a pan on medium heat until golden on both sides.',
     ],
+    mins: 8,
+    serves: 1,
+    category: 'Lunch',
+    level: 'Easy',
   },
   {
     id: 'pasta',
@@ -81,5 +112,9 @@ export const RECIPE_SEED: Recipe[] = [
       'Sauté garlic in butter, toss with pasta and cheese.',
       'Fold in greens, season, serve.',
     ],
+    mins: 20,
+    serves: 2,
+    category: 'Dinner',
+    level: 'Easy',
   },
 ];

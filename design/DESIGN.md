@@ -21,31 +21,51 @@ This file is the source of truth for the Phase 0 Tailwind theme.
 
 ---
 
-## Color tokens (extracted from Stitch HTML)
+## Color tokens (Cloudy with a Chance of Meatballs — restrained)
+
+The palette's calm comes from a **warm paper ground, white plates, deep slate text, and
+one accent**. Marinara red is reserved for expiry urgency; amber and green appear only
+inside status badges. Sky blue is a supporting tone and is never used as a full-bleed
+background — a saturated sky behind white cards is what made the earlier draft noisy.
 
 | Token | Hex | Use |
 |-------|-----|-----|
-| `bg` | `#FBF9F8` | app background (warm off-white) |
-| `surface` | `#FFFFFF` | cards |
-| `text` | `#1B1C1C` | primary text |
-| `text-muted` | `#717970` | secondary text |
-| `primary` | `#164525` | primary buttons (Cook this now, Save to Fridge), active nav |
-| `primary-dark` | `#00210B` | pressed / darkest green |
-| `primary-soft` | `#A0D3A7` | light green accents / fresh badge bg |
-| `accent` | `#904C25` | terracotta — warnings, low-stock bar |
-| `accent-dark` | `#783A14` | deeper terracotta |
-| `warn-soft` | `#FFB690` | "soon" / peach highlight |
-| `danger` | `#93000A` | expired badge / "Use by tomorrow" |
-| `border` | `#E4E2E1` | card borders / dividers |
-| `border-soft` | `#DCD9D9` | subtle dividers |
+| `bg` | `#F7F5F2` | app background (warm paper, the poster's ground tone) |
+| `surface` | `#FFFFFF` | cards & plates |
+| `text` | `#1E293B` | primary text (deep roast slate) |
+| `text-muted` | `#8C8880` | secondary text (warm grey) |
+| `primary` | `#D92626` | **the single accent** — expiry urgency, active nav (marinara) |
+| `primary-dark` | `#8E1515` | pressed / simmered sauce dark red |
+| `primary-soft` | `#FDECEC` | tomato cream highlight |
+| `accent` | `#D97706` | cheddar amber — status badges only |
+| `accent-dark` | `#9A3412` | deeper toasted syrup |
+| `warn-soft` | `#FEF3C7` | melted cheese / soon alert highlight |
+| `danger` | `#C81E1E` | expired badge |
+| `border` | `#ECE8E3` | card borders / dividers |
+| `border-soft` | `#F2EFEB` | subtle dividers |
+| `sky` | `#0EA5E9` | supporting weather cue only |
+| `fresh` | `#16A34A` | crisp lettuce / fresh badge |
+| `ink` | `#1E293B` | card outline + hard offset shadow |
+| `ink-soft` | `#475569` | card meta text |
 
-**Status badges:** Fresh = green (`primary-soft`/`primary`), Soon = peach/terracotta (`warn-soft`/`accent`), Expired = red (`danger`).
+**Category tints** (card fills — muted so a mixed grid still reads calm):
+`Breakfast #F7EED6` · `Lunch #E7EFD6` · `Dinner #F1F0EC` · `Snack #E4EFF8` · `cool #DCEAF6` (headers, freezer)
+
+**Card system:** every card is a `.card-plate` — 2px `ink` border + `4px 4px 0` hard offset
+shadow. Structure comes from the outline, which is what lets the fills carry category
+colour without the grid turning noisy.
+
+**Tabs (4):** Home · Fridge · Recipes · Profile, in a dark `ink` pill nav.
+`/alerts`, `/chat`, `/items` and `/account` stay live, reached from the Profile tab.
+
+
+**Status badges:** Fresh = crisp lettuce (`#16A34A` / emerald), Soon = melted cheese (`#D97706` / amber), Expired = meatball red (`#DC2626` / red).
 
 ---
 
 ## Typography
 
-- **Font family:** `Plus Jakarta Sans` (Google Fonts), weights 400/500/600/700.
+- **Font family:** `Plus Jakarta Sans` (Google Fonts), weights 400/500/600/700/800.
 - **Icons:** `Material Symbols Outlined`.
 
 ---

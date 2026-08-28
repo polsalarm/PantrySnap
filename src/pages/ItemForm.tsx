@@ -9,8 +9,11 @@ import PhotoThumb from '../components/PhotoThumb';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-// Fridge shelves map to "fridge" storage; pantry to "pantry". (No freezer shelf yet.)
-const storageForShelf = (shelfId: ShelfId): Storage => (shelfId === 'pantry' ? 'pantry' : 'fridge');
+// Shelf → storage class for shelf-life lookup. Freezer must map to "freezer":
+// frozen shelf life is an order of magnitude longer than chilled, so falling
+// through to "fridge" would badly under-estimate every frozen item's expiry.
+const storageForShelf = (shelfId: ShelfId): Storage =>
+  shelfId === 'pantry' ? 'pantry' : shelfId === 'freezer' ? 'freezer' : 'fridge';
 
 function addDays(dateIso: string, days: number): string {
   const d = new Date(dateIso);
