@@ -18,6 +18,7 @@
 </p>
 
 <p align="center">
+  <a href="https://pantrysnap-chi.vercel.app"><img alt="Live on Vercel" src="https://img.shields.io/badge/Live-pantrysnap--chi.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white" /></a>
   <a href="https://cursor.com"><img alt="Made with Cursor" src="https://img.shields.io/badge/Made_with-Cursor-000000?style=for-the-badge&logo=cursor&logoColor=white" /></a>
 </p>
 
@@ -34,7 +35,11 @@
 
 ---
 
-PantrySnap is a **mobile-first PWA**. Stock lives on-device in IndexedDB (including photos). AI — item detection, expiry analysis, recipes, and chat with **Steve** — goes through a small proxy so API keys never sit in the client.
+## Description
+
+**PantrySnap** is a mobile-first PWA that turns your fridge into a food radar. Photograph what you have, keep quantity and expiry in one place, and let Steve — the kitchen assistant — tell you what to cook before it spoils. Tracking is local-first (IndexedDB, works offline). Photo detect, expiry analysis, recipes, and chat run through a small Gemini proxy so keys never sit in the client. No account required.
+
+**Live:** [https://pantrysnap-chi.vercel.app](https://pantrysnap-chi.vercel.app)
 
 > Organize. Track. Never waste again.
 
@@ -109,7 +114,7 @@ npm run icons        # regenerate PWA icons from steve.png
 - [PHASING.md](./PHASING.md) — build phases
 - [server/README.md](./server/README.md) — proxy details
 
-Public repo: [github.com/polsalarm/PantrySnap](https://github.com/polsalarm/PantrySnap)
+Public repo: [github.com/polsalarm/PantrySnap](https://github.com/polsalarm/PantrySnap) · Live: [pantrysnap-chi.vercel.app](https://pantrysnap-chi.vercel.app)
 
 ## License
 
