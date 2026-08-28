@@ -42,6 +42,7 @@
 
 html, body, #root {
   min-height: 100%;
+  height: 100%;
 }
 
 body {
@@ -50,6 +51,110 @@ body {
   color: var(--color-text);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+}
+
+/* Scrolling stays fully functional — only the OS/browser scrollbar chrome is hidden. */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* legacy Edge */
+}
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, new Edge */
+  width: 0;
+  height: 0;
+}
+
+.device-screen-inner {
+  height: 100%;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.device-screen-inner::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* ---- Showcase phone frame (mockup.avif artwork) ---- */
+.phone-stage {
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 15%, rgba(217, 38, 38, 0.12), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 85% 80%, rgba(14, 165, 233, 0.14), transparent 50%),
+    linear-gradient(165deg, #ebe4db 0%, #f7f5f2 45%, #e8eef6 100%);
+}
+
+.phone-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(48px);
+  pointer-events: none;
+  opacity: 0.55;
+  will-change: transform;
+}
+.phone-blob-a {
+  width: 280px;
+  height: 280px;
+  background: #fca5a5;
+  top: -60px;
+  left: -40px;
+  animation: blob-drift-a 14s ease-in-out infinite;
+}
+.phone-blob-b {
+  width: 220px;
+  height: 220px;
+  background: #7dd3fc;
+  bottom: 10%;
+  right: -50px;
+  animation: blob-drift-b 18s ease-in-out infinite;
+}
+.phone-blob-c {
+  width: 160px;
+  height: 160px;
+  background: #fde68a;
+  top: 40%;
+  left: 8%;
+  opacity: 0.35;
+  animation: blob-drift-c 12s ease-in-out infinite;
+}
+
+@keyframes blob-drift-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(28px, 18px) scale(1.08); }
+  66% { transform: translate(-16px, 32px) scale(0.94); }
+}
+@keyframes blob-drift-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  40% { transform: translate(-36px, -22px) scale(1.1); }
+  70% { transform: translate(18px, -12px) scale(0.92); }
+}
+@keyframes blob-drift-c {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(22px, -28px) scale(1.12); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phone-blob-a,
+  .phone-blob-b,
+  .phone-blob-c {
+    animation: none;
+  }
+}
+
+.phone-device {
+  filter: drop-shadow(0 28px 48px rgba(30, 41, 59, 0.32));
+}
+
+.phone-frame-img {
+  image-rendering: auto;
+}
+
+/*
+ * Containing block for position:fixed descendants (BottomNav, FABs, Chat bar).
+ * Without this, fixed elements escape the bezel to the viewport.
+ */
+.device-screen {
+  transform: translateZ(0);
+  isolation: isolate;
 }
 
 /* Outlined plate: 2px ink border + hard offset shadow. The structure comes from
@@ -165,9 +270,14 @@ body {
   animation: shimmer 1.6s linear infinite;
 }
 .skeleton {
-  background: linear-gradient(90deg, rgba(0,0,0,0.03) 25%, rgba(0,0,0,0.06) 37%, rgba(0,0,0,0.03) 63%);
-  background-size: 400% 100%;
-  animation: pulse-soft 1.2s ease-in-out infinite;
+  background: linear-gradient(
+    110deg,
+    rgba(0, 0, 0, 0.03) 25%,
+    rgba(255, 255, 255, 0.45) 37%,
+    rgba(0, 0, 0, 0.03) 63%
+  );
+  background-size: 220% 100%;
+  animation: shimmer 1.6s linear infinite;
   border-radius: 1rem;
 }
 

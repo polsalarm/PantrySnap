@@ -150,7 +150,7 @@ export async function chat(
     contents: messages.map((m) => ({ role: m.role, parts: [{ text: m.text }] })),
     config: {
       systemInstruction:
-        'You are PantrySnap, a friendly kitchen assistant. Help the user cook with and not ' +
+        'You are Steve, a friendly kitchen assistant. Help the user cook with and not ' +
         'waste their food. Be concise and practical.\n' +
         `Their pantry right now: ${pantryText || '(empty)'}.`,
       tools: [{ googleSearch: {} }],

@@ -62,13 +62,17 @@ export function useRecipeViews(limit = 12): RecipeViewsResult {
     let cancelled = false;
 
     async function load(stock: Item[]) {
+      setBusy(true);
+      const urgent = urgentItems(stock);
+      const seedViews = RECIPE_SEED.map((r) => fromSeed(r, stock, urgent));
+
       if (stock.length === 0) {
-        setViews([]);
+        setOnline(false);
+        setViews(seedViews);
         setBusy(false);
         return;
       }
-      setBusy(true);
-      const urgent = urgentItems(stock);
+
       const api = await fetchRecipes(
         stock.map((i) => i.name),
         urgent.map((i) => i.name),
@@ -76,12 +80,16 @@ export function useRecipeViews(limit = 12): RecipeViewsResult {
       );
       if (cancelled) return;
 
-      if (api) {
+      if (api && api.length > 0) {
         setOnline(true);
-        setViews(api.map((r) => fromApi(r, stock, urgent)));
+        const seedIds = new Set(seedViews.map((v) => v.id));
+        const extras = api
+          .map((r) => fromApi(r, stock, urgent))
+          .filter((v) => !seedIds.has(v.id));
+        setViews([...seedViews, ...extras].slice(0, Math.max(limit, seedViews.length)));
       } else {
         setOnline(false);
-        setViews(RECIPE_SEED.map((r) => fromSeed(r, stock, urgent)));
+        setViews(seedViews);
       }
       setBusy(false);
     }

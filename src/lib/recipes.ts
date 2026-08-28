@@ -3,7 +3,8 @@ export type RecipeLevel = 'Easy' | 'Medium' | 'Hard';
 export interface Recipe {
   id: string;
   name: string;
-  emoji: string;
+  /** Lucide icon name, resolved via components/DishIcon.tsx. */
+  iconKey: string;
   ingredients: string[]; // lowercase keywords matched against item names
   steps: string[];
   /** Cook time in minutes. Hand-authored for these seeds. */
@@ -17,7 +18,7 @@ export const RECIPE_SEED: Recipe[] = [
   {
     id: 'omelette',
     name: 'Veggie Omelette',
-    emoji: '🍳',
+    iconKey: 'egg-fried',
     ingredients: ['egg', 'cheese', 'bell pepper', 'onion', 'milk'],
     steps: [
       'Whisk eggs with a splash of milk.',
@@ -32,7 +33,7 @@ export const RECIPE_SEED: Recipe[] = [
   {
     id: 'stir-fry',
     name: 'Quick Veggie Stir-Fry',
-    emoji: '🥦',
+    iconKey: 'salad',
     ingredients: ['carrot', 'bell pepper', 'broccoli', 'soy sauce', 'garlic', 'leafy greens'],
     steps: [
       'Heat oil in a wok, add garlic until fragrant.',
@@ -47,7 +48,7 @@ export const RECIPE_SEED: Recipe[] = [
   {
     id: 'sandwich',
     name: 'Deli Sandwich',
-    emoji: '🥪',
+    iconKey: 'sandwich',
     ingredients: ['deli meat', 'cheese', 'bread', 'condiment', 'leafy greens'],
     steps: [
       'Spread condiment on bread.',
@@ -62,7 +63,7 @@ export const RECIPE_SEED: Recipe[] = [
   {
     id: 'soup',
     name: 'Leftover Veggie Soup',
-    emoji: '🍲',
+    iconKey: 'soup',
     ingredients: ['carrot', 'onion', 'leftovers', 'broth', 'leafy greens'],
     steps: [
       'Sauté onion and carrot until soft.',
@@ -77,7 +78,7 @@ export const RECIPE_SEED: Recipe[] = [
   {
     id: 'yogurt-bowl',
     name: 'Yogurt Fruit Bowl',
-    emoji: '🥣',
+    iconKey: 'salad',
     ingredients: ['yogurt', 'fruit', 'honey'],
     steps: [
       'Spoon yogurt into a bowl.',
@@ -91,7 +92,7 @@ export const RECIPE_SEED: Recipe[] = [
   {
     id: 'grilled-cheese',
     name: 'Grilled Cheese',
-    emoji: '🧀',
+    iconKey: 'sandwich',
     ingredients: ['cheese', 'bread', 'butter'],
     steps: [
       'Butter bread slices, layer cheese between them.',
@@ -105,7 +106,7 @@ export const RECIPE_SEED: Recipe[] = [
   {
     id: 'pasta',
     name: 'Garlic Butter Pasta',
-    emoji: '🍝',
+    iconKey: 'utensils',
     ingredients: ['pasta', 'garlic', 'butter', 'cheese', 'leafy greens'],
     steps: [
       'Boil pasta until al dente.',

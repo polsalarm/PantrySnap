@@ -2,10 +2,10 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
-import { ensureShelvesSeeded } from './lib/db'
+import { ensureItemsSeeded, ensureShelvesSeeded } from './lib/db'
 import { startExpiryNotificationChecks } from './lib/notifications'
 
-ensureShelvesSeeded();
+void ensureShelvesSeeded().then(() => ensureItemsSeeded());
 startExpiryNotificationChecks();
 
 // Ask the browser to keep our local data (IndexedDB) from being evicted —

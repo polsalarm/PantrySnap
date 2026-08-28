@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Camera, Plus, Sparkles, X } from 'lucide-react';
 import { db, SHELF_SEED, withUid, type ExpirySource, type ShelfId } from '../lib/db';
 import { CATEGORIES, estimateExpiryDate, estimateShelfLifeDays } from '../lib/expiry';
 import { analyzeExpiry, detectItems, blobToBase64, aiErrorMessage, type Storage } from '../lib/api';
 import { useAuth } from '../lib/useAuth';
-import Icon from '../components/Icon';
 import PhotoThumb from '../components/PhotoThumb';
+import { DynamicFoodIcon } from '../components/FoodIcons';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -19,6 +20,12 @@ function addDays(dateIso: string, days: number): string {
   const d = new Date(dateIso);
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
+}
+
+function formatShortDate(iso: string): string {
+  const d = new Date(`${iso}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
 interface EstimateInfo {
@@ -70,6 +77,7 @@ export default function ItemForm() {
   const navigate = useNavigate();
 
   const [name, setName] = useState('');
+  const nameRef = useRef<HTMLInputElement>(null);
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [shelfId, setShelfId] = useState<ShelfId>('middle');
   const [quantityPct, setQuantityPct] = useState(100);
@@ -302,44 +310,93 @@ export default function ItemForm() {
     navigate('/items');
   }
 
-  return (
-    <div>
-      <header className="bg-bg flex items-center gap-2 w-full px-5 py-3 max-w-2xl mx-auto sticky top-0 z-40">
-        <button onClick={() => navigate(-1)} aria-label="Go back" className="text-text">
-          <Icon name="arrow_back" />
-        </button>
-        <h1 className="text-xl font-semibold text-text">{isEdit ? 'Edit Item' : 'Add to Pantry'}</h1>
-      </header>
+  const shelfName = SHELF_SEED.find((s) => s.id === shelfId)?.name ?? shelfId;
+  const subtitle = [category, shelfName, `${quantityPct}% left`].join(', ');
+  const noteAdded = (hint: string) =>
+    conditionNotes
+      .split(',')
+      .map((p) => p.trim().toLowerCase())
+      .includes(hint.toLowerCase());
 
-      <main className="max-w-2xl mx-auto px-5 pt-2 pb-28 flex flex-col gap-5">
-        <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border rounded-2xl p-4 cursor-pointer">
-          <PhotoThumb blob={primaryPhoto} alt={name || 'item photo'} className="w-32 h-32 rounded-xl" />
-          <span className="text-sm text-primary font-medium flex items-center gap-1">
-            <Icon name="photo_camera" /> {primaryPhoto ? 'Retake photo' : 'Take photo'}
-          </span>
-          <input type="file" accept="image/*" capture="environment" multiple className="hidden" onChange={handleAddPhotos} />
-        </label>
+  return (
+    <div className="h-full flex flex-col bg-bg">
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        {/* Hero photo — tap to capture. A photo (or typed name) identifies the item. */}
+        <div className="relative h-[38%] min-h-[220px] max-h-[280px] bg-[var(--color-tint-cool)] border-b-[3px] border-ink">
+          <div className="absolute inset-0">
+            {primaryPhoto ? (
+              <PhotoThumb
+                blob={primaryPhoto}
+                alt={name || 'item photo'}
+                className="w-full h-full"
+              />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-ink pointer-events-none px-6">
+                {name.trim() ? (
+                  <DynamicFoodIcon name={name} size={108} />
+                ) : (
+                  <Camera size={48} strokeWidth={2} className="text-ink/55" />
+                )}
+                <span className="inline-flex items-center gap-1.5 text-[13px] font-extrabold text-ink">
+                  <Camera size={16} strokeWidth={2.25} />
+                  Tap to take a photo
+                </span>
+                <span className="text-[11px] font-semibold text-ink-soft text-center">
+                  {isEdit ? 'Replace this item’s photo' : 'A photo fills in the name, category, and freshness'}
+                </span>
+              </div>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              multiple
+              aria-label="Take a photo of this item"
+              className="absolute inset-0 z-[1] w-full h-full cursor-pointer opacity-0"
+              onChange={handleAddPhotos}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            aria-label="Go back"
+            className="absolute top-4 left-4 z-10 size-10 grid place-items-center rounded-full bg-white text-ink border-2 border-ink shadow-[3px_3px_0_var(--color-ink)]"
+          >
+            <ArrowLeft size={20} strokeWidth={2.5} />
+          </button>
+        </div>
 
         {photos.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 px-5 -mt-7 relative z-10 pb-1">
             {photos.map((b, i) => (
               <div key={i} className="relative">
-                <PhotoThumb blob={b} alt={`angle ${i + 1}`} className="w-16 h-16 rounded-lg" />
+                <PhotoThumb
+                  blob={b}
+                  alt={`angle ${i + 1}`}
+                  className="size-14 rounded-lg border-2 border-ink shadow-[3px_3px_0_var(--color-ink)]"
+                />
                 <button
                   type="button"
                   onClick={() => removePhoto(i)}
                   aria-label={`Remove angle ${i + 1}`}
-                  className="absolute -top-1.5 -right-1.5 bg-bg border border-border rounded-full w-5 h-5 flex items-center justify-center text-text-muted"
+                  className="absolute -top-1.5 -right-1.5 bg-white border-2 border-ink rounded-full size-5 grid place-items-center text-ink"
                 >
-                  <Icon name="close" className="text-[14px]" />
+                  <X size={11} strokeWidth={2.5} />
                 </button>
               </div>
             ))}
             {photos.length < 4 && (
-              <label className="w-16 h-16 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer text-primary text-[11px] font-medium">
-                <Icon name="add_a_photo" />
+              <label className="size-14 rounded-lg border-2 border-dashed border-ink bg-white flex flex-col items-center justify-center cursor-pointer text-ink text-[10px] font-extrabold shadow-[3px_3px_0_var(--color-ink)]">
+                <Camera size={16} />
                 Angle
-                <input type="file" accept="image/*" capture="environment" multiple className="hidden" onChange={handleAddPhotos} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  multiple
+                  className="hidden"
+                  onChange={handleAddPhotos}
+                />
               </label>
             )}
             {photos.length > 1 && !aiLocked && (
@@ -347,169 +404,205 @@ export default function ItemForm() {
                 type="button"
                 onClick={() => void scanPhotos(photos)}
                 disabled={scanning}
-                className="text-sm text-primary font-medium flex items-center gap-1 ml-1 disabled:opacity-50"
+                className="text-xs text-primary font-extrabold flex items-center gap-1 disabled:opacity-50"
               >
-                <Icon name="auto_awesome" /> Rescan {photos.length} angles
+                <Sparkles size={14} /> Rescan
               </button>
             )}
           </div>
         )}
 
-        <div className="bg-primary-soft/35 border border-primary-soft rounded-2xl p-4 flex items-start gap-3">
-          <Icon name="center_focus_strong" className="text-primary shrink-0" />
-          <p className="text-sm leading-relaxed text-text-muted">
-            For better analysis, center one item in a clear, well-lit photo and keep labels facing
-            the camera. AI identifies the item, category, quantity, and visible freshness clues. Add
-            a few angles (front, label, top) for a more accurate scan; if it guesses wrong, retake
-            closer or remove a blurry angle. Manual entry only uses category and storage estimates.
+        <div className="px-6 pt-3 pb-3 text-center">
+          <input
+            ref={nameRef}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Item name"
+            aria-label="Name"
+            className="w-full text-center text-[26px] font-extrabold text-ink tracking-[-0.4px] placeholder:text-ink/25 outline-none bg-transparent"
+          />
+          <p className="mt-2 text-[13px] font-semibold text-ink-soft capitalize leading-snug">
+            {subtitle}
           </p>
         </div>
 
-        {scanning && (
-          <p className="text-sm text-primary text-center flex items-center justify-center gap-2">
-            <Icon name="auto_awesome" /> Scanning photo…
-          </p>
-        )}
-        {!scanning && scanMsg && (
-          <p className="text-sm text-text-muted text-center flex items-center justify-center gap-1.5">
-            <Icon name="check_circle" className="text-primary" /> {scanMsg}
+        <div className="mx-6 border-t-[3px] border-ink" />
+
+        {(scanning || scanMsg) && (
+          <p className="px-6 pt-3 text-[13px] font-semibold text-ink-soft text-center">
+            {scanning ? 'Scanning photo…' : scanMsg}
           </p>
         )}
 
-        <Field label="Name">
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Carton of milk"
-            className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary"
-          />
-        </Field>
+        <p className="px-6 pt-2 text-[11px] font-semibold leading-snug text-ink-soft">
+          For better analysis, center one item in a clear, well-lit photo and keep labels facing the
+          camera. AI identifies the item, category, quantity, and visible freshness clues. Add a few
+          angles (front, label, top) for a more accurate scan; if it guesses wrong, retake closer or
+          remove a blurry angle. Manual entry only uses category and storage estimates.
+        </p>
 
-        <Field label="Category">
-          <select
-            value={category}
-            onChange={(e) => handleCategoryChange(e.target.value)}
-            className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary capitalize"
+        <section className="mx-5 mt-3 card-plate px-4 py-2">
+          <h2 className="text-[17px] font-extrabold text-ink pt-2 mb-1">Details</h2>
+          <ExtraRow label="Category">
+            <select
+              value={category}
+              onChange={(e) => handleCategoryChange(e.target.value)}
+              className="bg-transparent text-right text-[15px] font-bold text-ink outline-none capitalize appearance-none"
+            >
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c} className="capitalize">
+                  {c}
+                </option>
+              ))}
+            </select>
+          </ExtraRow>
+          <ExtraRow label="Storage">
+            <select
+              value={shelfId}
+              onChange={(e) => handleShelfChange(e.target.value as ShelfId)}
+              className="bg-transparent text-right text-[15px] font-bold text-ink outline-none appearance-none"
+            >
+              {SHELF_SEED.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </ExtraRow>
+          <ExtraRow label="Purchased">
+            <input
+              type="date"
+              value={purchaseDate}
+              onChange={(e) => handlePurchaseDateChange(e.target.value)}
+              className="bg-transparent text-right text-[15px] font-bold text-ink outline-none"
+            />
+          </ExtraRow>
+          <ExtraRow
+            label={
+              <span className="flex items-center gap-2">
+                Expiry
+                {expirySource === 'estimated' && (
+                  <span className="text-[10px] font-extrabold text-accent-dark bg-warn-soft border-2 border-ink px-1.5 py-0.5 rounded-full">
+                    EST
+                  </span>
+                )}
+              </span>
+            }
           >
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c} className="capitalize">
-                {c}
-              </option>
-            ))}
-          </select>
-        </Field>
+            <input
+              type="date"
+              value={expiryDate}
+              onChange={(e) => handleExpiryDateChange(e.target.value)}
+              className="bg-transparent text-right text-[15px] font-bold text-ink outline-none"
+            />
+          </ExtraRow>
+        </section>
 
-        <Field label="Storage Location">
-          <select
-            value={shelfId}
-            onChange={(e) => handleShelfChange(e.target.value as ShelfId)}
-            className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary"
-          >
-            {SHELF_SEED.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </Field>
-
-        <Field label={`Quantity — ${quantityPct}% left`}>
+        <section className="mx-5 mt-3 card-plate px-4 py-4">
+          <h2 className="text-[17px] font-extrabold text-ink mb-3">Stock</h2>
+          <label className="block text-[15px] font-bold text-ink mb-1.5">
+            Quantity — {quantityPct}% left
+          </label>
           <input
             type="range"
             min={0}
             max={100}
             value={quantityPct}
             onChange={(e) => setQuantityPct(Number(e.target.value))}
-            className="w-full accent-primary"
+            className="w-full accent-[var(--color-primary)]"
           />
-        </Field>
-
-        <Field label={`Low-stock alert below — ${lowStockThresholdPct}%`}>
+          <label className="block text-[15px] font-bold text-ink mt-4 mb-1.5">
+            Low-stock alert below — {lowStockThresholdPct}%
+          </label>
           <input
             type="range"
             min={0}
             max={100}
             value={lowStockThresholdPct}
             onChange={(e) => setLowStockThresholdPct(Number(e.target.value))}
-            className="w-full accent-accent"
+            className="w-full accent-[var(--color-accent)]"
           />
-        </Field>
+        </section>
 
-        <Field label="Purchased On">
-          <input
-            type="date"
-            value={purchaseDate}
-            onChange={(e) => handlePurchaseDateChange(e.target.value)}
-            className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary"
-          />
-        </Field>
-
-        <Field label="Condition notes">
-          <div className="flex flex-col gap-2">
-            <textarea
-              value={conditionNotes}
-              onChange={(e) => setConditionNotes(e.target.value)}
-              onBlur={handleConditionNotesBlur}
-              placeholder="e.g. opened yesterday, sealed, smells off, mold visible"
-              rows={3}
-              className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary resize-none"
-            />
-            <div className="flex flex-wrap gap-2">
-              {CONDITION_HINTS.map((note) => (
-                <button
-                  key={note}
-                  type="button"
-                  onClick={() => appendConditionNote(note)}
-                  className="rounded-full border border-border bg-surface px-3 py-1 text-xs font-semibold text-text-muted"
-                >
-                  {note}
-                </button>
-              ))}
+        <section className="mx-5 mt-3 card-plate px-4 py-2">
+          <h2 className="text-[17px] font-extrabold text-ink pt-2 mb-1">Extra</h2>
+          {CONDITION_HINTS.map((note) => (
+            <div
+              key={note}
+              className="flex items-center justify-between py-3 border-b-2 border-ink/10 last:border-0"
+            >
+              <span className="text-[15px] font-bold text-ink">{note}</span>
+              <button
+                type="button"
+                onClick={() => appendConditionNote(note)}
+                disabled={noteAdded(note)}
+                aria-label={`Add ${note}`}
+                className="size-8 rounded-full bg-primary text-white border-2 border-ink shadow-[2px_2px_0_var(--color-ink)] grid place-items-center disabled:opacity-35"
+              >
+                <Plus size={16} strokeWidth={2.75} />
+              </button>
             </div>
-          </div>
-        </Field>
+          ))}
+        </section>
 
-        <Field
-          label={
-            <span className="flex items-center gap-2">
-              Expiry Date
-              {expirySource === 'estimated' && (
-                <span className="text-xs font-semibold text-accent bg-warn-soft px-2 py-0.5 rounded-full">
-                  ESTIMATED
-                </span>
-              )}
-            </span>
-          }
-        >
-          <input
-            type="date"
-            value={expiryDate}
-            onChange={(e) => handleExpiryDateChange(e.target.value)}
-            className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary"
+        <section className="mx-5 mt-3 card-plate px-4 py-4">
+          <h2 className="text-[17px] font-extrabold text-ink mb-2">Note</h2>
+          <textarea
+            value={conditionNotes}
+            onChange={(e) => setConditionNotes(e.target.value)}
+            onBlur={handleConditionNotesBlur}
+            placeholder="e.g. opened yesterday, sealed, smells off, mold visible"
+            rows={4}
+            className="w-full bg-bg border-2 border-ink rounded-xl px-4 py-3 text-[14px] font-semibold text-ink placeholder:text-ink/35 outline-none resize-none"
           />
-        </Field>
+        </section>
 
-        <ExpiryAnalysis
-          expirySource={expirySource}
-          estimateInfo={estimateInfo}
-          visualAnalysis={visualAnalysis}
-          conditionNotes={conditionNotes}
-          hasPhoto={photos.length > 0}
-        />
+        <div className="px-5 pt-4 pb-8">
+          <ExpiryAnalysis
+            expirySource={expirySource}
+            estimateInfo={estimateInfo}
+            visualAnalysis={visualAnalysis}
+            conditionNotes={conditionNotes}
+            hasPhoto={photos.length > 0}
+          />
+        </div>
+      </div>
 
+      <div className="shrink-0 px-5 pt-2 pb-5 bg-bg">
         <button
-          onClick={handleSave}
-          className="w-full bg-primary text-white font-semibold rounded-xl py-3.5 mt-2"
+          type="button"
+          onClick={() => {
+            if (!name.trim()) {
+              nameRef.current?.focus();
+              return;
+            }
+            void handleSave();
+          }}
+          disabled={!name.trim()}
+          className="btn-meatball w-full rounded-2xl py-4 px-5 flex items-center justify-between border-2 border-ink shadow-[4px_4px_0_var(--color-ink)] disabled:opacity-40"
         >
-          Save to Fridge
+          <span>{isEdit ? 'Save changes' : 'Add to pantry'}</span>
+          <span>{formatShortDate(expiryDate)}</span>
         </button>
-
         {isEdit && (
-          <button onClick={handleDelete} className="w-full text-danger font-semibold py-2">
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="w-full text-danger font-extrabold py-3 text-sm"
+          >
             Delete item
           </button>
         )}
-      </main>
+      </div>
+    </div>
+  );
+}
+
+function ExtraRow({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-3.5 border-b-2 border-ink/10 last:border-0">
+      <span className="text-[15px] font-bold text-ink shrink-0">{label}</span>
+      {children}
     </div>
   );
 }
@@ -543,20 +636,15 @@ function ExpiryAnalysis({
       ? `${estimateInfo.baselineMinDays}–${estimateInfo.baselineMaxDays} days`
       : undefined;
   return (
-    <div className="animate-in bg-surface border border-border rounded-2xl p-4 card-shadow">
-      <div className="flex items-center justify-between gap-2 text-text font-semibold">
-        <span className="flex items-center gap-2">
-          <Icon name="psychology" className="text-primary" filled />
-          Expiry analysis
-        </span>
+    <div className="card-plate p-4">
+      <div className="flex items-center justify-between gap-2 text-ink font-extrabold text-[15px]">
+        <span>Expiry analysis</span>
         {estimateInfo.analyzing ? (
-          <span className="text-xs font-semibold text-primary flex items-center gap-1">
-            <Icon name="auto_awesome" /> Analyzing…
-          </span>
+          <span className="text-xs font-extrabold text-primary">Analyzing…</span>
         ) : (
           expirySource === 'estimated' &&
           estimateInfo.confidence && (
-            <span className="text-xs font-semibold text-text-muted capitalize bg-bg px-2 py-0.5 rounded-full">
+            <span className="text-xs font-extrabold text-ink-soft capitalize border-2 border-ink rounded-full px-2 py-0.5">
               {estimateInfo.confidence} confidence
             </span>
           )
@@ -564,12 +652,12 @@ function ExpiryAnalysis({
       </div>
 
       {expirySource === 'manual' ? (
-        <p className="text-sm leading-relaxed text-text-muted mt-2">
+        <p className="text-[13px] font-semibold leading-relaxed text-ink-soft mt-2">
           You manually set this date, so PantrySnap will not override it.
         </p>
       ) : (
         <>
-          <p className="text-sm leading-relaxed text-text-muted mt-2">
+          <p className="text-[13px] font-semibold leading-relaxed text-ink-soft mt-2">
             Estimated as purchase date + {estimateInfo.days} days for {estimateInfo.category} stored
             in {estimateInfo.storage}.
             {rangeText && ` Typical range ${rangeText}.`}
@@ -579,7 +667,7 @@ function ExpiryAnalysis({
           {estimateInfo.reasoning && estimateInfo.reasoning.length > 0 && (
             <ul className="mt-2 flex flex-col gap-1">
               {estimateInfo.reasoning.map((r, i) => (
-                <li key={i} className="text-sm leading-relaxed text-text-muted flex gap-2">
+                <li key={i} className="text-[13px] font-semibold leading-relaxed text-ink-soft flex gap-2">
                   <span className="text-primary">•</span>
                   <span>{r}</span>
                 </li>
@@ -589,32 +677,22 @@ function ExpiryAnalysis({
         </>
       )}
 
-      <p className="text-sm leading-relaxed text-text-muted mt-2">
+      <p className="text-[13px] font-semibold leading-relaxed text-ink-soft mt-2">
         {visualAnalysis ||
           (hasPhoto
             ? 'Photo saved. Sign in and rescan if you want AI to describe visible freshness clues.'
             : 'No photo analysis yet. A clear photo helps AI detect the food type and visible condition, which can make the estimate easier to review.')}
       </p>
       {conditionNotes.trim() && (
-        <p className="text-sm leading-relaxed text-accent-dark mt-2">
+        <p className="text-[13px] font-semibold leading-relaxed text-accent-dark mt-2">
           User notes to consider: {conditionNotes.trim()}
         </p>
       )}
       {estimateInfo.safetyNote && expirySource !== 'manual' && (
-        <p className="text-sm leading-relaxed text-danger mt-2 flex gap-2">
-          <Icon name="warning" className="shrink-0" />
-          <span>{estimateInfo.safetyNote}</span>
+        <p className="text-[13px] font-semibold leading-relaxed text-danger mt-2">
+          {estimateInfo.safetyNote}
         </p>
       )}
-    </div>
-  );
-}
-
-function Field({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-sm font-medium text-text-muted">{label}</span>
-      {children}
     </div>
   );
 }

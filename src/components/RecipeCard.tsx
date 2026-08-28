@@ -1,4 +1,9 @@
+import { useRef } from 'react';
+import { motion } from 'motion/react';
+import gsap from 'gsap';
 import { type RecipeView, tintFor, rescueLabel } from '../lib/recipeview';
+import DishIcon from './DishIcon';
+import { fadeUp, springSnappy } from '../lib/motion';
 
 export function ClockIcon() {
   return (
@@ -30,7 +35,7 @@ export function ListIcon() {
 
 function Heart({ filled }: { filled: boolean }) {
   return (
-    <svg
+    <motion.svg
       width="17"
       height="17"
       viewBox="0 0 24 24"
@@ -38,9 +43,11 @@ function Heart({ filled }: { filled: boolean }) {
       stroke={filled ? '#D92626' : 'rgba(30,41,59,0.35)'}
       strokeWidth="2"
       className="pointer-events-none"
+      animate={filled ? { scale: [1, 1.25, 1] } : { scale: 1 }}
+      transition={springSnappy}
     >
       <path d="M12 21s-7.5-4.7-10-9.3C0.3 8 1.6 4 5.4 3.2 8 2.6 10.4 4 12 6.3 13.6 4 16 2.6 18.6 3.2 22.4 4 23.7 8 22 11.7 19.5 16.3 12 21 12 21z" />
-    </svg>
+    </motion.svg>
   );
 }
 
@@ -55,7 +62,6 @@ function LockBadge() {
   );
 }
 
-/** Meta rows are omitted rather than faked when a source doesn't publish them. */
 function MetaRows({ recipe }: { recipe: RecipeView }) {
   return (
     <div className="mt-2 flex flex-col gap-1.5 text-ink-soft">
@@ -79,6 +85,26 @@ function MetaRows({ recipe }: { recipe: RecipeView }) {
   );
 }
 
+function burstHearts(anchor: HTMLElement) {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const rect = anchor.getBoundingClientRect();
+  for (let i = 0; i < 5; i++) {
+    const el = document.createElement('span');
+    el.textContent = '♥';
+    el.style.cssText = `position:fixed;left:${rect.left + rect.width / 2}px;top:${rect.top}px;color:#D92626;font-size:12px;pointer-events:none;z-index:9999;`;
+    document.body.appendChild(el);
+    gsap.to(el, {
+      x: (Math.random() - 0.5) * 48,
+      y: -28 - Math.random() * 24,
+      opacity: 0,
+      scale: 0.4,
+      duration: 0.55,
+      ease: 'power2.out',
+      onComplete: () => el.remove(),
+    });
+  }
+}
+
 export function HeroRecipeCard({
   recipe,
   saved,
@@ -90,18 +116,28 @@ export function HeroRecipeCard({
   onToggleSave: () => void;
   onCook: () => void;
 }) {
+  const heartRef = useRef<HTMLButtonElement>(null);
   return (
-    <article
-      className="card-plate card-plate-lg p-4 flex gap-3.5 items-start mb-4 animate-in"
+    <motion.article
+      variants={fadeUp}
+      initial="hidden"
+      animate="show"
+      whileHover={{ y: -4, scale: 1.01 }}
+      transition={springSnappy}
+      className="card-plate card-plate-lg p-4 flex gap-3.5 items-start mb-4 group"
       style={{ background: tintFor(recipe.category) }}
     >
-      <div className="emoji-well size-[82px] text-[38px] overflow-hidden">
+      <motion.div
+        className="emoji-well size-[82px] overflow-hidden text-ink"
+        whileHover={{ scale: 1.06, rotate: -2 }}
+        transition={springSnappy}
+      >
         {recipe.image ? (
           <img src={recipe.image} alt="" loading="lazy" className="size-full object-cover" />
         ) : (
-          <span>{recipe.emoji}</span>
+          <DishIcon iconKey={recipe.iconKey} size={34} strokeWidth={1.75} />
         )}
-      </div>
+      </motion.div>
       <div className="flex-1 min-w-0">
         <div className="text-[10px] font-extrabold text-ink-soft uppercase tracking-[1px]">
           Cook this first
@@ -127,25 +163,31 @@ export function HeroRecipeCard({
             {recipe.rescues ? rescueLabel(recipe.rescues) : 'Ready'}
           </span>
           <div className="flex items-center gap-2 shrink-0">
-            <button
+            <motion.button
+              whileTap={{ scale: 0.92 }}
               onClick={onCook}
               className="btn-pill px-3.5 py-2 text-[11px]"
               aria-label={`Mark ${recipe.title} as cooked`}
             >
               Cooked it
-            </button>
-            <button
-              onClick={onToggleSave}
+            </motion.button>
+            <motion.button
+              ref={heartRef}
+              whileTap={{ scale: 0.85 }}
+              onClick={() => {
+                if (!saved && heartRef.current) burstHearts(heartRef.current);
+                onToggleSave();
+              }}
               aria-label={saved ? 'Remove from saved' : 'Save recipe'}
               aria-pressed={saved}
-              className="size-[34px] rounded-full border-2 border-ink bg-white grid place-items-center cursor-pointer p-0 shrink-0 active:scale-95 transition-transform"
+              className="size-[34px] rounded-full border-2 border-ink bg-white grid place-items-center cursor-pointer p-0 shrink-0"
             >
               <Heart filled={saved} />
-            </button>
+            </motion.button>
           </div>
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 }
 
@@ -160,23 +202,32 @@ export default function RecipeCard({
   saved?: boolean;
   onToggleSave?: () => void;
   onCook?: () => void;
-  /** All-recipes view marks meals you can't complete yet. */
   showLock?: boolean;
 }) {
+  const heartRef = useRef<HTMLButtonElement>(null);
   const locked = showLock && !recipe.ready;
   return (
-    <article
-      className="card-plate p-4 px-3.5 flex flex-col animate-in"
+    <motion.article
+      variants={fadeUp}
+      layout
+      whileHover={{ y: -5, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      transition={springSnappy}
+      className="card-plate p-4 px-3.5 flex flex-col"
       style={{ background: tintFor(recipe.category) }}
     >
-      <div className="emoji-well size-16 text-[29px] self-center relative overflow-visible">
+      <motion.div
+        className="emoji-well size-16 self-center relative overflow-visible text-ink"
+        whileHover={{ scale: 1.08, rotate: 3 }}
+        transition={springSnappy}
+      >
         {recipe.image ? (
           <img src={recipe.image} alt="" loading="lazy" className="size-full object-cover rounded-full" />
         ) : (
-          <span>{recipe.emoji}</span>
+          <DishIcon iconKey={recipe.iconKey} size={26} strokeWidth={1.75} />
         )}
         {locked && <LockBadge />}
-      </div>
+      </motion.div>
 
       <h3 className="mt-3 text-[15px] font-bold text-ink leading-snug">{recipe.title}</h3>
       <div className="mt-1.5 text-[10.5px] font-extrabold text-ink-soft uppercase tracking-[0.6px]">
@@ -205,28 +256,34 @@ export default function RecipeCard({
 
         <div className="flex items-center gap-1.5 shrink-0">
           {onCook && !locked && (
-            <button
+            <motion.button
+              whileTap={{ scale: 0.85 }}
               onClick={onCook}
               aria-label={`Mark ${recipe.title} as cooked`}
-              className="size-8 rounded-full border-2 border-ink bg-white grid place-items-center cursor-pointer p-0 active:scale-95 transition-transform"
+              className="size-8 rounded-full border-2 border-ink bg-white grid place-items-center cursor-pointer p-0"
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1E293B" strokeWidth="2.5" strokeLinecap="round">
                 <path d="M4 12l6 6L20 6" />
               </svg>
-            </button>
+            </motion.button>
           )}
           {onToggleSave && (
-            <button
-              onClick={onToggleSave}
+            <motion.button
+              ref={heartRef}
+              whileTap={{ scale: 0.85 }}
+              onClick={() => {
+                if (!saved && heartRef.current) burstHearts(heartRef.current);
+                onToggleSave();
+              }}
               aria-label={saved ? 'Remove from saved' : 'Save recipe'}
               aria-pressed={saved}
-              className="size-8 rounded-full border-2 border-ink bg-white grid place-items-center cursor-pointer p-0 active:scale-95 transition-transform"
+              className="size-8 rounded-full border-2 border-ink bg-white grid place-items-center cursor-pointer p-0"
             >
               <Heart filled={Boolean(saved)} />
-            </button>
+            </motion.button>
           )}
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 }

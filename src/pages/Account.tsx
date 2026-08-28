@@ -58,57 +58,63 @@ export default function Account() {
 
   return (
     <div>
-      <header className="bg-bg flex items-center gap-2 w-full px-5 py-3 max-w-2xl mx-auto sticky top-0 z-40">
-        <button onClick={() => navigate(-1)} aria-label="Go back" className="text-text">
+      <header className="bg-sky-100/90 backdrop-blur-md flex items-center gap-2.5 w-full px-5 py-3.5 max-w-2xl mx-auto sticky top-0 z-40 border-b-2 border-white shadow-xs">
+        <button onClick={() => navigate(-1)} aria-label="Go back" className="grid size-9 place-items-center bg-white border-2 border-sky-200 rounded-xl text-slate-800 hover:border-red-400 shadow-2xs transition-all active:scale-95">
           <Icon name="arrow_back" />
         </button>
-        <h1 className="text-xl font-semibold text-text">Account & Sync</h1>
+        <div>
+          <h1 className="text-xl font-black text-slate-800 leading-tight">FLDSMDFR Sync & Lab</h1>
+          <span className="text-[10px] font-black text-sky-800 uppercase tracking-wider">Multi-Device Food Cloud</span>
+        </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-5 pt-2 pb-28 flex flex-col gap-4">
+      <main className="max-w-2xl mx-auto px-5 pt-4 pb-28 flex flex-col gap-4">
         {!cloudEnabled ? (
-          <div className="bg-surface rounded-2xl p-5 card-shadow text-center text-text-muted">
-            <Icon name="cloud_off" className="text-3xl text-text-muted" />
-            <p className="mt-2 font-medium text-text">Cloud sync not configured</p>
-            <p className="text-sm mt-1">
-              Set <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> to enable
-              multi-device sync. The app works fully offline without it.
+          <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 border-2 border-white shadow-[0_6px_0_rgba(186,230,253,0.7)] text-center text-slate-600">
+            <span className="text-4xl inline-block mb-2 animate-bob">📡</span>
+            <p className="mt-1 font-black text-slate-800 text-base">FLDSMDFR Cloud Sync Offline</p>
+            <p className="text-xs font-bold text-slate-500 mt-1 max-w-sm mx-auto leading-relaxed">
+              Set <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> to enable multi-device sync. The food radar and storage work 100% offline without it!
             </p>
           </div>
         ) : userEmail ? (
           <>
-            <div className="bg-surface rounded-2xl p-5 card-shadow">
-              <p className="text-sm text-text-muted">Signed in as</p>
-              <p className="font-semibold text-text">{userEmail}</p>
+            <div className="bg-white/90 backdrop-blur-md rounded-3xl p-5 border-2 border-white shadow-[0_6px_0_rgba(186,230,253,0.7)]">
+              <span className="text-xs font-black text-sky-800 uppercase tracking-wider">Signed in as</span>
+              <p className="text-base font-black text-slate-800 mt-0.5">{userEmail}</p>
             </div>
             <button
               onClick={doSync}
               disabled={busy}
-              className="flex items-center justify-center gap-2 bg-primary text-white font-semibold rounded-xl py-3 disabled:opacity-60"
+              className="btn-meatball flex items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-black disabled:opacity-60 shadow-md"
             >
-              <Icon name="sync" /> Sync now
+              <Icon name="sync" className={busy ? 'animate-spin' : ''} />
+              <span>{busy ? 'Syncing with FLDSMDFR…' : 'Sync Pantry Radar Now'}</span>
             </button>
-            <button onClick={signOut} disabled={busy} className="text-danger font-medium py-2">
-              Sign out
+            <button onClick={signOut} disabled={busy} className="text-red-600 font-black text-xs py-2 hover:underline text-center">
+              Sign out from this device
             </button>
           </>
         ) : (
-          <div className="bg-surface rounded-2xl p-5 card-shadow flex flex-col gap-3">
-            <p className="text-text font-medium">Sign in to sync across devices</p>
+          <div className="bg-white/90 backdrop-blur-md rounded-3xl p-5 border-2 border-white shadow-[0_6px_0_rgba(186,230,253,0.7)] flex flex-col gap-3.5">
+            <div>
+              <p className="text-base font-black text-slate-800">Connect to FLDSMDFR Cloud</p>
+              <p className="text-xs font-bold text-slate-500 mt-0.5">Sign in to sync your fridge and pantry across all devices.</p>
+            </div>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@email.com"
               aria-label="Email address"
-              className="bg-bg border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-primary"
+              className="bg-sky-50/80 border-2 border-sky-200 rounded-2xl px-4 py-3 text-xs sm:text-sm font-bold text-slate-800 outline-none focus:border-red-500 transition-colors"
             />
             <button
               onClick={sendLink}
               disabled={busy || !email.trim()}
-              className="bg-primary text-white font-semibold rounded-xl py-3 disabled:opacity-60"
+              className="btn-meatball rounded-2xl py-3.5 text-sm font-black disabled:opacity-60 shadow-md"
             >
-              Send magic link
+              {busy ? 'Sending…' : 'Send Magic Link'}
             </button>
           </div>
         )}

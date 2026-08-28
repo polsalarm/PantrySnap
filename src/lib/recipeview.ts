@@ -7,7 +7,8 @@ import { expiryStatus, daysUntil } from './expiry';
 export interface RecipeView {
   id: string;
   title: string;
-  emoji: string;
+  /** Lucide icon name, resolved via components/DishIcon.tsx. */
+  iconKey: string;
   image?: string;
   category: string;
   level?: RecipeLevel;
@@ -65,25 +66,29 @@ function countHave(ingredients: string[], items: Item[]): number {
   return ingredients.filter((ing) => items.some((item) => matches(ing, item.name))).length;
 }
 
-/** Emoji fallback for backend recipes, which ship a photo but no glyph. */
-function emojiFor(title: string, category: string): string {
+/**
+ * Icon key for backend recipes, which ship a photo but no glyph. Resolves to a
+ * Lucide icon name (see components/DishIcon.tsx) — never an emoji.
+ */
+export function iconKeyFor(title: string, category: string): string {
   const t = title.toLowerCase();
-  if (/pasta|spaghetti|noodle/.test(t)) return '🍝';
-  if (/rice|risotto/.test(t)) return '🍚';
-  if (/soup|stew|broth/.test(t)) return '🍲';
-  if (/salad/.test(t)) return '🥗';
-  if (/sandwich|burger|melt/.test(t)) return '🥪';
-  if (/egg|omelet|omelette/.test(t)) return '🍳';
-  if (/pizza/.test(t)) return '🍕';
-  if (/taco|burrito/.test(t)) return '🌮';
-  if (/cake|pie|dessert|cookie/.test(t)) return '🍰';
-  if (/pancake|waffle/.test(t)) return '🥞';
-  if (/curry/.test(t)) return '🍛';
-  if (/chicken/.test(t)) return '🍗';
-  if (/fish|seafood|salmon/.test(t)) return '🐟';
-  if (category === 'Breakfast') return '🍳';
-  if (category === 'Snack') return '🫐';
-  return '🍽️';
+  if (/pasta|spaghetti|noodle/.test(t)) return 'utensils';
+  if (/rice|risotto/.test(t)) return 'wheat';
+  if (/soup|stew|broth/.test(t)) return 'soup';
+  if (/salad/.test(t)) return 'salad';
+  if (/sandwich|burger|melt/.test(t)) return 'sandwich';
+  if (/egg|omelet|omelette/.test(t)) return 'egg-fried';
+  if (/pizza/.test(t)) return 'pizza';
+  if (/taco|burrito|wrap/.test(t)) return 'sandwich';
+  if (/cake|pie|dessert/.test(t)) return 'cake-slice';
+  if (/cookie/.test(t)) return 'cookie';
+  if (/pancake|waffle|croissant/.test(t)) return 'croissant';
+  if (/curry/.test(t)) return 'soup';
+  if (/chicken|beef|pork|meat/.test(t)) return 'beef';
+  if (/fish|seafood|salmon|shrimp/.test(t)) return 'fish';
+  if (category === 'Breakfast') return 'egg-fried';
+  if (category === 'Snack') return 'cookie';
+  return 'chef-hat';
 }
 
 export function fromApi(recipe: ApiRecipe, items: Item[], urgent: Item[]): RecipeView {
@@ -92,7 +97,7 @@ export function fromApi(recipe: ApiRecipe, items: Item[], urgent: Item[]): Recip
   return {
     id: recipe.id,
     title: recipe.title,
-    emoji: emojiFor(recipe.title, category),
+    iconKey: iconKeyFor(recipe.title, category),
     image: recipe.image,
     category,
     level: recipe.level,
@@ -111,7 +116,7 @@ export function fromSeed(recipe: Recipe, items: Item[], urgent: Item[]): RecipeV
   return {
     id: recipe.id,
     title: recipe.name,
-    emoji: recipe.emoji,
+    iconKey: recipe.iconKey,
     category: recipe.category,
     level: recipe.level,
     mins: recipe.mins,

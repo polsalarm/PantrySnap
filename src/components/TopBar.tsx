@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
+import { motion } from 'motion/react';
 import Icon from './Icon';
+import { springSoft } from '../lib/motion';
 
 export default function TopBar({
   title,
@@ -11,7 +13,12 @@ export default function TopBar({
   showWeather?: boolean;
 }) {
   return (
-    <div className="sticky top-0 z-40 bg-bg/90 backdrop-blur-md">
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={springSoft}
+      className="sticky top-0 z-40 bg-bg/90 backdrop-blur-md"
+    >
       <header className="flex items-center justify-between w-full px-5 pt-4 pb-3 max-w-2xl mx-auto">
         <h1 className="text-base font-bold text-text tracking-tight leading-none">{title}</h1>
         {account && (
@@ -24,6 +31,6 @@ export default function TopBar({
           </Link>
         )}
       </header>
-    </div>
+    </motion.div>
   );
 }

@@ -19,13 +19,13 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon-32.png', 'apple-touch-icon.png'],
+      includeAssets: ['favicon-32.png', 'apple-touch-icon.png', 'steve.png', 'mockup-frame.avif', 'mockup-frame.png'],
       manifest: {
         name: 'PantrySnap',
         short_name: 'PantrySnap',
-        description: 'Organize. Track. Never waste again.',
-        theme_color: '#164525',
-        background_color: '#FBF9F8',
+        description: 'Organize. Track. Cloudy with a chance of delicious meals!',
+        theme_color: '#D92626',
+        background_color: '#F7F5F2',
         display: 'standalone',
         start_url: '/',
         scope: '/',

@@ -10,9 +10,12 @@
 // app (Phase 5 data layer) keeps working.
 import { GoogleGenAI } from '@google/genai';
 
+// gemini-2.5-* is no longer available to new API keys (Google returns 404 on
+// generateContent even though ListModels still lists it) — verified directly
+// against generativelanguage.googleapis.com before updating these.
 export const MODELS = {
-  flash: 'gemini-2.5-flash', // detection, tips, chat — cheap/fast/high-frequency
-  pro: 'gemini-2.5-pro', // recipe generation — quality
+  flash: 'gemini-3.6-flash', // detection, tips, chat — cheap/fast/high-frequency
+  pro: 'gemini-3.1-pro-preview', // recipe generation — quality
 } as const;
 
 const apiKey = process.env.GEMINI_API_KEY?.trim();

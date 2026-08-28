@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import Icon from './Icon';
+import { useState, useEffect } from 'react';
+import { DynamicFoodIcon } from './FoodIcons';
 
-export default function PhotoThumb({ blob, alt, className = '' }: { blob?: Blob; alt: string; className?: string }) {
+export default function PhotoThumb({ blob, alt = '', className = '' }: { blob?: Blob; alt?: string; className?: string }) {
   const [url, setUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -16,8 +16,8 @@ export default function PhotoThumb({ blob, alt, className = '' }: { blob?: Blob;
 
   if (!url) {
     return (
-      <div className={`bg-border-soft flex items-center justify-center text-text-muted ${className}`}>
-        <Icon name="image" />
+      <div className={`bg-sky-50 border-2 border-sky-100 flex items-center justify-center p-1.5 shadow-2xs select-none ${className}`}>
+        <DynamicFoodIcon name={alt} size={28} />
       </div>
     );
   }

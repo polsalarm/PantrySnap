@@ -6,7 +6,7 @@ export default function AiLock({ label }: { label: string }) {
   return (
     <Link
       to="/account"
-      className="flex items-center justify-center gap-2 bg-border-soft text-text-muted font-medium rounded-xl py-3 px-4"
+      className="flex items-center justify-center gap-2 bg-surface border border-border text-text-muted hover:border-primary/40 hover:text-text font-semibold rounded-xl py-3 px-4 card-shadow transition-all"
     >
       <Icon name="lock" className="text-base" />
       {label}

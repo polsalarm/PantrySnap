@@ -115,66 +115,85 @@ function isoOffset(days: number): string {
 
 /**
  * Demo fridge stock. Names include the `RECIPE_SEED` keywords so Home can
- * show complete meals; expiry offsets match Fridge Home.dc.html accents.
+ * show complete meals; short `daysUntilExpiry` values fill Alerts / Home.
+ * `quantityPct` below the 20% threshold seeds the Low stock filter.
  */
 export const ITEM_SEED: Array<{
   name: string;
   category: string;
   shelfId: ShelfId;
   daysUntilExpiry: number;
+  quantityPct?: number;
+  conditionNotes?: string;
 }> = [
   { name: 'Ice cream', category: 'frozen', shelfId: 'freezer', daysUntilExpiry: 30 },
   { name: 'Dumplings', category: 'frozen', shelfId: 'freezer', daysUntilExpiry: 25 },
   { name: 'Peas', category: 'frozen', shelfId: 'freezer', daysUntilExpiry: 40 },
-  { name: 'Garlic', category: 'produce', shelfId: 'crisper', daysUntilExpiry: 2 },
-  { name: 'Spinach leafy greens', category: 'produce', shelfId: 'crisper', daysUntilExpiry: 1 },
+  { name: 'Garlic', category: 'produce', shelfId: 'crisper', daysUntilExpiry: 2, conditionNotes: 'sealed' },
+  { name: 'Spinach leafy greens', category: 'produce', shelfId: 'crisper', daysUntilExpiry: 1, quantityPct: 15, conditionNotes: 'wilting' },
   { name: 'Carrots', category: 'produce', shelfId: 'crisper', daysUntilExpiry: 3 },
   { name: 'Bell pepper', category: 'produce', shelfId: 'crisper', daysUntilExpiry: 4 },
   { name: 'Onion', category: 'produce', shelfId: 'crisper', daysUntilExpiry: 6 },
   { name: 'Broccoli', category: 'produce', shelfId: 'crisper', daysUntilExpiry: 5 },
   { name: 'Potatoes', category: 'produce', shelfId: 'bottom', daysUntilExpiry: 2 },
-  { name: 'Berry fruit', category: 'produce', shelfId: 'crisper', daysUntilExpiry: 6 },
+  { name: 'Berry fruit', category: 'produce', shelfId: 'crisper', daysUntilExpiry: 2, conditionNotes: 'soft' },
   { name: 'Butter', category: 'dairy', shelfId: 'door', daysUntilExpiry: 18 },
-  { name: 'Eggs', category: 'dairy', shelfId: 'door', daysUntilExpiry: 12 },
-  { name: 'Milk', category: 'dairy', shelfId: 'door', daysUntilExpiry: 7 },
+  { name: 'Eggs', category: 'dairy', shelfId: 'door', daysUntilExpiry: 5, quantityPct: 18 },
+  { name: 'Milk', category: 'dairy', shelfId: 'door', daysUntilExpiry: 2, quantityPct: 12, conditionNotes: 'opened' },
   { name: 'Swiss cheese', category: 'dairy', shelfId: 'door', daysUntilExpiry: 9 },
-  { name: 'Yogurt', category: 'dairy', shelfId: 'top', daysUntilExpiry: 8 },
-  { name: 'Chicken', category: 'meat', shelfId: 'bottom', daysUntilExpiry: 4 },
-  { name: 'Turkey deli meat', category: 'meat', shelfId: 'middle', daysUntilExpiry: 5 },
-  { name: 'Rice', category: 'pantry', shelfId: 'pantry', daysUntilExpiry: 90 },
+  { name: 'Yogurt', category: 'dairy', shelfId: 'top', daysUntilExpiry: 1, quantityPct: 10 },
+  { name: 'Chicken', category: 'meat', shelfId: 'bottom', daysUntilExpiry: 1, conditionNotes: 'raw' },
+  { name: 'Turkey deli meat', category: 'meat', shelfId: 'middle', daysUntilExpiry: 2 },
+  { name: 'Rice', category: 'pantry', shelfId: 'pantry', daysUntilExpiry: 90, quantityPct: 15 },
   { name: 'Pasta', category: 'pantry', shelfId: 'pantry', daysUntilExpiry: 180 },
-  { name: 'Bread', category: 'bakery', shelfId: 'middle', daysUntilExpiry: 4 },
+  { name: 'Bread', category: 'bakery', shelfId: 'middle', daysUntilExpiry: 0, quantityPct: 8, conditionNotes: 'opened' },
   { name: 'Soy sauce', category: 'condiments', shelfId: 'pantry', daysUntilExpiry: 180 },
-  { name: 'Mayo condiment', category: 'condiments', shelfId: 'door', daysUntilExpiry: 40 },
+  { name: 'Mayo condiment', category: 'condiments', shelfId: 'door', daysUntilExpiry: 40, quantityPct: 8 },
   { name: 'Honey', category: 'pantry', shelfId: 'pantry', daysUntilExpiry: 365 },
   { name: 'Broth', category: 'pantry', shelfId: 'pantry', daysUntilExpiry: 14 },
-  { name: 'Leftovers', category: 'leftovers', shelfId: 'middle', daysUntilExpiry: 2 },
+  { name: 'Leftovers', category: 'leftovers', shelfId: 'middle', daysUntilExpiry: -1, conditionNotes: 'cooked' },
 ];
 
-const ITEM_SEED_FLAG = 'pantrysnap.itemSeed.v1';
+const ITEM_SEED_FLAG = 'pantrysnap.itemSeed.v3';
+const OLD_SEED_FLAGS = ['pantrysnap.itemSeed.v1', 'pantrysnap.itemSeed.v2'];
 
-/** Fill IndexedDB with demo stock once, skipping names already on hand. */
+/** Fill IndexedDB with demo stock; later flags also refresh expiry on named seed rows. */
 export async function ensureItemsSeeded() {
   if (localStorage.getItem(ITEM_SEED_FLAG)) return;
 
   const existing = await db.items.toArray();
-  const have = new Set(existing.map((i) => i.name.toLowerCase().trim()));
+  const byName = new Map(existing.map((i) => [i.name.toLowerCase().trim(), i]));
   const now = Date.now();
-  const rows = ITEM_SEED.filter((s) => !have.has(s.name.toLowerCase())).map((s) =>
+
+  const toAdd = ITEM_SEED.filter((s) => !byName.has(s.name.toLowerCase())).map((s) =>
     withUid({
       name: s.name,
       category: s.category,
       shelfId: s.shelfId,
-      quantityPct: 80,
+      quantityPct: s.quantityPct ?? 80,
       purchaseDate: isoOffset(-3),
       expiryDate: isoOffset(s.daysUntilExpiry),
       expirySource: 'estimated' as const,
+      conditionNotes: s.conditionNotes,
       lowStockThresholdPct: 20,
       createdAt: now,
       updatedAt: now,
     }),
   );
+  if (toAdd.length > 0) await db.items.bulkAdd(toAdd);
 
-  if (rows.length > 0) await db.items.bulkAdd(rows);
+  for (const s of ITEM_SEED) {
+    const item = byName.get(s.name.toLowerCase());
+    if (item?.id == null) continue;
+    await db.items.update(item.id, {
+      expiryDate: isoOffset(s.daysUntilExpiry),
+      expirySource: 'estimated',
+      quantityPct: s.quantityPct ?? item.quantityPct,
+      conditionNotes: s.conditionNotes ?? item.conditionNotes,
+      updatedAt: now,
+    });
+  }
+
   localStorage.setItem(ITEM_SEED_FLAG, '1');
+  for (const flag of OLD_SEED_FLAGS) localStorage.removeItem(flag);
 }

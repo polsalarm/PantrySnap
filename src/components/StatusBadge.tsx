@@ -2,9 +2,9 @@ import type { ExpiryStatus } from '../lib/expiry';
 import { expiryLabel } from '../lib/expiry';
 
 const STYLES: Record<ExpiryStatus, string> = {
-  fresh: 'bg-primary-soft text-primary-dark',
-  soon: 'bg-warn-soft text-accent-dark',
-  expired: 'bg-danger/10 text-danger',
+  fresh: 'bg-emerald-100 text-emerald-800 border border-emerald-200/60',
+  soon: 'bg-amber-100 text-amber-900 border border-amber-200/80',
+  expired: 'bg-red-100 text-danger border border-red-200/80',
 };
 
 export default function StatusBadge({ status, dateIso }: { status: ExpiryStatus; dateIso: string }) {
