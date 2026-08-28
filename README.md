@@ -1,119 +1,124 @@
-# 🥫 PantrySnap
+<p align="center">
+  <img src="public/steve.png" alt="Steve, the PantrySnap mascot" width="168" />
+</p>
 
-> **A visual pantry & fridge organizer — powered by AI.**
-> Snap a photo of your shelves, track what you own, quantity, and expiry dates —
-> then let AI tell you what to cook before food goes to waste.
->
-> **Organize. Track. Never waste again.**
+<p align="center">
+  <img src="public/icons/icon-192.png" alt="PantrySnap app icon" width="88" />
+  &nbsp;
+  <img src="public/apple-touch-icon.png" alt="PantrySnap Apple touch icon" width="88" />
+  &nbsp;
+  <img src="public/favicon.svg" alt="PantrySnap mark" width="88" />
+</p>
 
-Built as a **mobile-first PWA** (installable, offline-capable).
+<h1 align="center">PantrySnap</h1>
+
+<p align="center">
+  <strong>Your attentive kitchen cloud.</strong><br />
+  Snap what’s in the fridge, track quantity and expiry, and cook it before it goes to waste.
+</p>
+
+<p align="center">
+  <a href="https://cursor.com"><img alt="Made with Cursor" src="https://img.shields.io/badge/Made_with-Cursor-000000?style=for-the-badge&logo=cursor&logoColor=white" /></a>
+</p>
+
+<p align="center">
+  <img alt="React" src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white" />
+  <img alt="Vite" src="https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite&logoColor=white" />
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white" />
+  <img alt="Tailwind CSS" src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" />
+  <img alt="Dexie" src="https://img.shields.io/badge/Dexie-IndexedDB-FF4F64?style=flat-square" />
+  <img alt="Gemini" src="https://img.shields.io/badge/Google-Gemini-8E75B2?style=flat-square&logo=googlegemini&logoColor=white" />
+  <img alt="Supabase" src="https://img.shields.io/badge/Supabase-optional_sync-3FCF8E?style=flat-square&logo=supabase&logoColor=white" />
+  <img alt="PWA" src="https://img.shields.io/badge/PWA-installable-5A0FC8?style=flat-square&logo=pwa&logoColor=white" />
+</p>
 
 ---
 
-## ✨ Features
+PantrySnap is a **mobile-first PWA**. Stock lives on-device in IndexedDB (including photos). AI — item detection, expiry analysis, recipes, and chat with **Steve** — goes through a small proxy so API keys never sit in the client.
 
-### Core
-- 🧊 **View your fridge like real life** — photo-based shelf layout (Top, Middle, Bottom, Crisper, Door, pantry sections). Tap a shelf to see its items.
-- 👀 **See what you have at a glance** — per-shelf list with photo, name, expiry date, quantity %.
-- 📊 **Track quantity & expiry** — quantity slider (% left), purchase date, expiry date per item.
-- 🧮 **Smart expiry estimate** — asks *"when did you buy it?"* on add, then estimates expiry from purchase date + real shelf-life data (USDA FoodKeeper) for that category & storage. Override anytime.
-- 🔔 **Expiry reminders & low-stock alerts** — get notified before food spoils or runs out.
-- 🍳 **Cook with what you have** — recipes ranked by how many on-hand ingredients match.
-- ⏳ **Cook to beat expiry** — auto-suggests a recipe that uses your soonest-to-expire items first. *Use it before you lose it.*
+> Organize. Track. Never waste again.
 
-### 🤖 AI-powered
-- 📷 **Auto-detect items from photo** — snap a shelf, AI identifies items and pre-fills name, category, and estimated quantity. No manual typing.
-- ✍️ **AI recipe generation** — generates full recipes (ingredients + steps) from your on-hand and near-expiry items, not just a fixed seed list.
-- 💡 **Smart expiry & usage tips** — AI suggests how to store/use items, flags what to cook first, nudges to cut waste.
-- 💬 **Chat assistant** — ask *"what can I cook tonight?"* or *"what's expiring this week?"* — conversational over your own pantry data.
+## What you can do
 
----
+| Tab | What it’s for |
+| --- | --- |
+| **Home** | Tonight’s meals from what’s already in the fridge, with soon-to-expire ingredients called out first |
+| **Fridge** | Real-shelf layout — freezer, top, middle, bottom, crisper, door, pantry |
+| **Profile** | Alerts, Steve chat, account, install |
 
-## 🛠 Tech Stack
+- **Photo capture** — add an item from a photo; Gemini fills name, category, quantity, and freshness notes
+- **Expiry that isn’t a guess** — USDA FoodKeeper baselines, adjusted for opened / cooked / storage
+- **Alerts** — expiring, expired, and low-stock in one list
+- **Cook to beat expiry** — recipes ranked by on-hand match and urgency
+- **Steve** — ask what’s expiring, what to cook tonight, or how long something lasts
+- **Installable** — add to home screen; tracking works offline
+
+## Screens
+
+Home · Fridge · Profile. Chat is reached from Profile. Adding stock is a full-screen capture flow, not a tab.
+
+## Stack
 
 | Layer | Choice |
-|-------|--------|
-| **Frontend** | React + Vite + TypeScript |
-| **PWA** | `vite-plugin-pwa` (manifest, service worker, offline, installable) |
-| **Styling** | Tailwind CSS — warm / earthy palette (cream bg, dark green + tan accents) |
-| **State** | Zustand |
-| **Local data** | IndexedDB via Dexie (offline-first; items + photos as blobs) |
-| **Camera** | Device camera via `<input capture>` / `getUserMedia` |
-| **Notifications** | Web Notifications API + service worker |
-| **AI** | Google Gemini — `2.5-flash` for detection/chat, `2.5-pro` for recipe generation |
-| **Data sources** | Open Food Facts (products), USDA FoodKeeper (shelf-life), TheMealDB/Spoonacular (recipes), Gemini Google Search grounding |
-| **AI backend** | Thin serverless proxy (keeps API key off the client) |
-| **Cloud (later)** | Supabase / Firebase — sync + auth across devices |
-
-> **Local-first.** The app works fully offline for tracking. AI features call out to a
-> small backend proxy — the Gemini API key **never** lives in the PWA client.
-
----
-
-## 🤖 AI Architecture
-
-The PWA never calls Gemini or third-party APIs directly. A thin backend proxy holds keys,
-fetches real data, then grounds Gemini with it (hybrid RAG — real data in, less hallucination):
+| --- | --- |
+| App | React 19, Vite 8, TypeScript, Tailwind v4 |
+| Motion | Motion + GSAP |
+| Local data | Dexie (IndexedDB) — items, photos, cook log |
+| PWA | `vite-plugin-pwa` — manifest, service worker, install prompt |
+| Cloud (optional) | Supabase auth + sync |
+| AI proxy | Hono on Node — Gemini (`2.5-flash` / `2.5-pro`) |
+| Grounding | USDA FoodKeeper, Open Food Facts, TheMealDB / Spoonacular |
 
 ```
-                          ┌─▶ Open Food Facts  (product info)
-PWA client ─(photo/prompt)─▶ Backend proxy ─┼─▶ USDA FoodKeeper   (shelf-life)
-                          │  (keys, RAG,     ├─▶ TheMealDB/Spoonacular (recipes)
-                          │   rate-limit)    └─▶ Gemini API (vision + text, Search grounding)
-                          ▼
-                    grounded result
+PWA  ──photo / prompt──▶  proxy (keys, rate limit)
+                            ├─ Open Food Facts
+                            ├─ USDA FoodKeeper
+                            ├─ TheMealDB / Spoonacular
+                            └─ Gemini (vision + text)
 ```
 
-| Feature | Model | Real-data grounding |
-|---------|-------|---------------------|
-| **Item detection** | `gemini-2.5-flash` | photo → structured `{name, category, qty%}[]`; name reconciled vs Open Food Facts |
-| **Recipe generation** | `gemini-2.5-pro` | seeded with real recipes (TheMealDB/Spoonacular) matching on-hand + near-expiry items |
-| **Smart tips** | `gemini-2.5-flash` | shelf-life / storage from USDA FoodKeeper dataset |
-| **Chat assistant** | `gemini-2.5-flash` | pantry data + Gemini Google Search grounding for fresh info |
+Detection and chat use Flash. Recipe generation uses Pro. Configure keys in `server/.env` — see `server/.env.example`.
 
-Why tiered: detection + chat are high-frequency → Flash (cheap/fast). Recipe quality matters → Pro.
-Configure keys in the backend `.env` — see `.env.example` (added during setup).
-
----
-
-## 🗺 Roadmap
-
-Built in phases — each ships something usable. See **[PHASING.md](./PHASING.md)** for detail.
-
-- **P0** — Scaffold + PWA shell
-- **P1** — Items + local storage (CRUD + photo)
-- **P2** — Fridge / shelf view
-- **P3** — Expiry reminders & low-stock alerts
-- **P4** — Recipes (cook with what you have)
-- **P4.5** — Cook to beat expiry (expiry-weighted auto-suggest)
-- **P5** — Data layer (Open Food Facts, USDA FoodKeeper, recipe APIs) + backend proxy
-- **P6** — AI features (photo detect, recipe gen, tips, chat) — Gemini, grounded
-- **P7** — Polish & UX (Lighthouse PWA pass)
-- **P8** — Cloud sync & accounts *(optional)*
-
----
-
-## 🚀 Getting Started
-
-Phases 0–4 are implemented: PWA shell, item CRUD with photo + expiry, shelf
-view, alerts, and recipe matching.
+## Run it locally
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
-npm run build    # production build + service worker
-npm run preview  # serve the production build locally
+npm run dev          # app → http://localhost:5173
 ```
 
----
+AI (detect, expiry analysis, recipes, chat) needs the proxy on **8787**:
 
-## 📦 Project Docs
+```bash
+cd server
+npm install
+cp .env.example .env   # add GEMINI_API_KEY
+npm run dev
+```
 
-- **[PLAN.md](./PLAN.md)** — full project plan, data model, success criteria
-- **[PHASING.md](./PHASING.md)** — build phases
+Vite proxies `/api` to the server in development. For production, set `VITE_API_BASE` to the deployed proxy URL.
 
----
+```bash
+npm run build
+npm run preview
+npm run icons        # regenerate PWA icons from steve.png
+```
 
-## 📄 License
+## Repo
+
+- [PLAN.md](./PLAN.md) — product plan and data model
+- [PHASING.md](./PHASING.md) — build phases
+- [server/README.md](./server/README.md) — proxy details
+
+Public repo: [github.com/polsalarm/PantrySnap](https://github.com/polsalarm/PantrySnap)
+
+## License
 
 TBD.
+
+---
+
+<p align="center">
+  <img src="public/steve.png" alt="Steve" width="72" />
+  <br />
+  <strong>Made with <a href="https://cursor.com">Cursor</a></strong>
+</p>
