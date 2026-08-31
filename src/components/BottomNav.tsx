@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { House, Refrigerator, ChefHat } from 'lucide-react';
+import { House, Refrigerator, MessageCircle, ChefHat } from 'lucide-react';
 import { springBouncy, springLayout, springSnappy } from '../lib/motion';
 
 const ACTIVE = '#FFFFFF';
@@ -20,11 +20,13 @@ const TAB_STATES = {
 const HOVER_RIM = { rest: { opacity: 0 }, hover: { opacity: 1 } };
 
 // Same Lucide icons used elsewhere on-screen — Refrigerator matches
-// FridgeHome's empty state, ChefHat matches Profile's own hero avatar — so
-// the nav echoes the page it points to instead of a generic glyph set.
+// FridgeHome's empty state, MessageCircle matches Profile's own "Steve
+// assistant" row, ChefHat matches Profile's hero avatar — so the nav echoes the
+// page it points to instead of a generic glyph set.
 const TABS = [
   { to: '/', label: 'Home', Icon: House },
   { to: '/fridge', label: 'Fridge', Icon: Refrigerator },
+  { to: '/chat', label: 'Steve', Icon: MessageCircle },
   { to: '/profile', label: 'Profile', Icon: ChefHat },
 ];
 

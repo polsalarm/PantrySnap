@@ -93,20 +93,20 @@ export const pressable = {
 };
 
 /** Primary nav order — used for directional page slides. */
-export const NAV_ORDER = ['/', '/fridge', '/profile'] as const;
+export const NAV_ORDER = ['/', '/fridge', '/chat', '/profile'] as const;
 
 export function navIndex(path: string): number {
   const exact = NAV_ORDER.indexOf(path as (typeof NAV_ORDER)[number]);
   if (exact >= 0) return exact;
   if (path.startsWith('/fridge') || path.startsWith('/shelf')) return 1;
+  if (path.startsWith('/chat')) return 2;
   if (
     path.startsWith('/profile') ||
     path.startsWith('/account') ||
-    path.startsWith('/chat') ||
     path.startsWith('/alerts') ||
     path.startsWith('/items')
   ) {
-    return 2;
+    return 3;
   }
   return 0;
 }

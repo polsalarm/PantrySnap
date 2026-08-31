@@ -235,7 +235,7 @@ export default function Chat() {
       {/* Composer — a normal flex child pinned to the bottom of the page's own
           column, not position:fixed. Avoids depending on the phone-frame's
           transform-based containing-block trick, which is fragile across browsers. */}
-      <div className="relative z-10 mt-auto shrink-0 px-4 pt-2 pb-8">
+      <div className="relative z-10 mt-auto shrink-0 px-4 pt-2 pb-[98px]">
         <div className="max-w-md mx-auto">
               <AnimatePresence>
                 {tipsOpen && (

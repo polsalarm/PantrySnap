@@ -5,8 +5,9 @@ import { Refrigerator, Sparkles } from 'lucide-react';
 import { generateRecipe, aiErrorMessage, type GeneratedRecipe } from '../lib/api';
 import type { Item } from '../lib/db';
 import { useRecipeViews, useSaved } from '../lib/useRecipeViews';
-import { urgentItems, type RecipeView } from '../lib/recipeview';
+import { iconKeyFor, urgentItems, type RecipeView } from '../lib/recipeview';
 import RecipeCard, { HeroRecipeCard } from '../components/RecipeCard';
+import FoodMachine from '../components/FoodMachine';
 import Mascot from '../components/Mascot';
 import {
   fadeScale,
@@ -32,14 +33,19 @@ function GenerateFromItems({ items }: { items: Item[] }) {
   const [recipe, setRecipe] = useState<GeneratedRecipe | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The machine owns the recipe until it has dispensed it, so the card never
+  // appears behind the overlay that is still busy delivering it.
+  const [pending, setPending] = useState<GeneratedRecipe | null>(null);
 
   async function generate() {
     setBusy(true);
     setError(null);
+    setRecipe(null);
+    setPending(null);
     try {
       const names = items.map((item) => item.name);
       const expiring = urgentItems(items).map((item) => item.name);
-      setRecipe(await generateRecipe(names, expiring));
+      setPending(await generateRecipe(names, expiring));
     } catch (err) {
       setError(aiErrorMessage(err));
     } finally {
@@ -49,6 +55,16 @@ function GenerateFromItems({ items }: { items: Item[] }) {
 
   return (
     <>
+      <FoodMachine
+        active={busy}
+        dish={pending ? { title: pending.title, iconKey: iconKeyFor(pending.title, 'Dinner') } : null}
+        feed={urgentItems(items).concat(items).slice(0, 5).map((item) => item.name)}
+        onRevealed={() => {
+          setRecipe(pending);
+          setPending(null);
+        }}
+      />
+
       {items.length > 0 && (
         <motion.div
           className="mb-5"

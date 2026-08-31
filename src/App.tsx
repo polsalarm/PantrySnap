@@ -127,13 +127,11 @@ function AnimatedRoutes() {
   );
 }
 
-/** Full-screen chat has its own bottom composer — the tab bar would fight it for space. */
+/** Forms take over the screen; every tab destination keeps the bar. */
 function AppShell() {
   const location = useLocation();
   const hideNav =
-    location.pathname === '/chat' ||
-    location.pathname === '/items/new' ||
-    location.pathname.endsWith('/edit');
+    location.pathname === '/items/new' || location.pathname.endsWith('/edit');
   const showFridgeFab = location.pathname === '/' || location.pathname === '/fridge';
 
   return (
