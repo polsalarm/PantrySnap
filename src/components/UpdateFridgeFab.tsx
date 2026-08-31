@@ -14,7 +14,9 @@ export default function UpdateFridgeFab() {
       initial={{ opacity: 0, y: 24, x: '-50%', scale: 0.9 }}
       animate={{ opacity: 1, y: 0, x: '-50%', scale: 1 }}
       transition={{ ...springBouncy, delay: 0.2 }}
-      className="fixed left-1/2 bottom-[104px] z-40"
+      // Tracks BottomNav, which now also clears the home indicator.
+      style={{ bottom: 'calc(104px + env(safe-area-inset-bottom))' }}
+      className="fixed left-1/2 z-40"
     >
       <motion.div whileHover={{ y: -3, scale: 1.03 }} whileTap={{ y: 1, scale: 0.96 }}>
         <Link

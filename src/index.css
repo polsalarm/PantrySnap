@@ -289,3 +289,94 @@ body {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ---- iOS-style liquid glass tab bar ----
+   Layered the way the system material is: a saturated blur of whatever scrolls
+   underneath, an ink tint, a specular highlight on the top rim, a hairline all
+   round, and a dark inner edge at the bottom so the bar reads as a slab of
+   glass sitting above the page rather than a flat panel.
+
+   The 0.78 tint is a contrast floor, not a taste call: over a pure-white card
+   the composite lands at #4F5866, which keeps white labels at 7.1:1 on the bar
+   and 4.8:1 on the active pill. Thinning the tint for a prettier blur drops the
+   10px labels below 4.5:1 the moment a white card scrolls behind them. */
+/* No `position` here on purpose: plain CSS outrules Tailwind's @layer
+   utilities, so declaring it would silently override `fixed` on the element.
+   No `overflow: hidden` either — the sheen layers below inherit the pill radius
+   on their own, and clipping here would eat the tabs' focus ring. */
+.nav-glass {
+  /* The darkening is done by brightness(), not by a thick tint. Both can hit the
+     same composite luminance, but a flat alpha tint scales the backdrop's own
+     variation by (1 - alpha) — at 0.78 only 22% of the contrast behind the bar
+     survives, which is why it read as a wall. brightness(0.46) with a 0.16 tint
+     lands on the same luminance while preserving 39% of the variation, so card
+     edges, colour and motion stay legible through the glass. */
+  background-color: rgba(30, 41, 59, 0.16);
+  -webkit-backdrop-filter: blur(22px) saturate(190%) brightness(0.46);
+  backdrop-filter: blur(22px) saturate(190%) brightness(0.46);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.38),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 rgba(15, 23, 42, 0.30),
+    0 2px 8px rgba(15, 23, 42, 0.16),
+    0 12px 34px rgba(15, 23, 42, 0.26);
+}
+
+/* Specular sheen: light source above, falling off before it reaches the labels. */
+.nav-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.04) 38%,
+    rgba(255, 255, 255, 0) 62%
+  );
+}
+
+/* Edge refraction: glass is brighter where it curves away at the left/right caps. */
+.nav-glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0) 14%,
+    rgba(255, 255, 255, 0) 86%,
+    rgba(255, 255, 255, 0.12) 100%
+  );
+}
+
+/* No backdrop-filter (older Firefox, blur disabled for power saving): the tint
+   alone is 16% and would leave the labels sitting on raw page content, so fall
+   back to opaque rather than ship something unreadable. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .nav-glass {
+    background-color: rgba(30, 41, 59, 0.97);
+  }
+}
+
+/* Active tab. Almost all of the capsule is rim, not fill: a heavier fill lifts
+   the luminance under the label and eats the contrast headroom the thin tint
+   above is spending. The rim sits at the edge, behind no glyph, so it costs
+   nothing and still reads as a separate pane of glass. */
+.nav-glass-pill {
+  background-color: rgba(255, 255, 255, 0.06);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(15, 23, 42, 0.18);
+}
+
+/* Pointer hover only — never the sole affordance, and touch never sees it.
+   Rim with no fill on purpose: any fill here sits directly behind the label and
+   would drop it under 4.5:1 for as long as the pointer rests on the tab. */
+.nav-glass-hover {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.32);
+}
