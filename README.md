@@ -43,6 +43,22 @@
 
 > Organize. Track. Never waste again.
 
+## Flutter (Android / iOS)
+
+This branch adds a native Flutter client in `flutter/` on top of the existing PWA. The React app, Hono proxy, and Supabase schema stay where they are. Architecture notes: [MIGRATION.md](./MIGRATION.md).
+
+```bash
+cd flutter
+flutter pub get
+flutter run
+```
+
+Optional public config only:
+
+```bash
+flutter run --dart-define=API_BASE=https://your-proxy.example/api
+```
+
 ## What you can do
 
 | Tab | What it’s for |
