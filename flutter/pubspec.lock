@@ -236,7 +236,7 @@ packages:
     dependency: transitive
     description:
       name: jni_util
-      sha256: "1ba86da04a5f2bf18e0e233175086337e0b305e356d28211bf55f21c504cbd3"
+      sha256: "1ba86da04a5f2bf18fde2edb235587e70c5b0fc5bd4ba955f46b00942c3fc35f"
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
@@ -244,7 +244,7 @@ packages:
     dependency: transitive
     description:
       name: leak_tracker
-      sha256: "33e2e26bdd85a0112ec15400cc8cbffea70d0f9c3407491f672a2fad47915e2de"
+      sha256: "33e2e26bdd85a0112ec15400c8cbffea70d0f9c3407491f672a2fad47915e2de"
       url: "https://pub.dev"
     source: hosted
     version: "11.0.2"
