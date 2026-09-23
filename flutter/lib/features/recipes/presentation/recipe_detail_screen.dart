@@ -50,8 +50,9 @@ class RecipeDetailScreen extends ConsumerWidget {
       ),
       body: SafeArea(
         child: PageBody(
-          bottom: 32,
+          inset: false,
           child: ListView(
+            padding: PageBody.insets(bottom: 32),
             children: [
               AppCard(
                 large: true,

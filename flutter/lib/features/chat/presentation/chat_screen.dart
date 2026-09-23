@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_exception.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/steve.dart';
@@ -231,7 +232,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 88),
+              const SizedBox(height: AppSpacing.navClearance),
             ],
           ),
         ),

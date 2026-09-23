@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_spacing.dart';
 import '../../../core/errors/app_exception.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
@@ -101,7 +102,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       body: SafeArea(
         child: PageBody(
+          inset: false,
           child: ListView(
+            padding: PageBody.insets(bottom: AppSpacing.navClearance),
             children: [
               AppCard(
                 large: true,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_spacing.dart';
 import '../../../core/constants/catalog.dart';
 import '../../../core/utils/dates.dart';
 import '../../../core/widgets/app_card.dart';
@@ -24,7 +25,9 @@ class FridgeScreen extends ConsumerWidget {
     return Scaffold(
       body: SafeArea(
         child: PageBody(
+          inset: false,
           child: ListView(
+            padding: PageBody.insets(bottom: AppSpacing.navClearance),
             children: [
               Text(
                 'Your fridge',

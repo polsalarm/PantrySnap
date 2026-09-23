@@ -9,24 +9,30 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: navigationShell,
-      extendBody: true,
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-        child: Align(
-          alignment: Alignment.bottomCenter,
-          heightFactor: 1,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: _GlassNav(
-              index: navigationShell.currentIndex,
-              onTap: (i) => navigationShell.goBranch(
-                i,
-                initialLocation: i == navigationShell.currentIndex,
+      body: Stack(
+        children: [
+          navigationShell,
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SafeArea(
+              minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 480),
+                  child: _GlassNav(
+                    index: navigationShell.currentIndex,
+                    onTap: (i) => navigationShell.goBranch(
+                      i,
+                      initialLocation: i == navigationShell.currentIndex,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

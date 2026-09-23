@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_spacing.dart';
 import '../../../core/config/env.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/steve.dart';
@@ -21,7 +22,9 @@ class ProfileScreen extends ConsumerWidget {
     return Scaffold(
       body: SafeArea(
         child: PageBody(
+          inset: false,
           child: ListView(
+            padding: PageBody.insets(bottom: AppSpacing.navClearance),
             children: [
               AppCard(
                 large: true,

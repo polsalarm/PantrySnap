@@ -74,10 +74,17 @@ class EmojiWell extends StatelessWidget {
 }
 
 class PageBody extends StatelessWidget {
-  const PageBody({super.key, required this.child, this.bottom = AppSpacing.navClearance});
+  const PageBody({super.key, required this.child, this.bottom = AppSpacing.page, this.inset = true});
 
   final Widget child;
   final double bottom;
+
+  /// False when [child] is a scroll view applying [insets] itself: a viewport
+  /// clips at its edge, so padding outside it eats the cards' offset shadow.
+  final bool inset;
+
+  static EdgeInsets insets({double bottom = AppSpacing.page}) =>
+      EdgeInsets.fromLTRB(AppSpacing.page, 20, AppSpacing.page, bottom);
 
   @override
   Widget build(BuildContext context) {
@@ -85,10 +92,7 @@ class PageBody extends StatelessWidget {
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: AppSpacing.maxContentWidth),
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(AppSpacing.page, 20, AppSpacing.page, bottom),
-          child: child,
-        ),
+        child: inset ? Padding(padding: insets(bottom: bottom), child: child) : child,
       ),
     );
   }
